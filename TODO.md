@@ -54,6 +54,9 @@
 - [x] **Enable Google APIs** — Calendar, Contacts (People), Sheets, Docs APIs enabled in Google Cloud project. All 6 services confirmed working *(2026-02-22)*
 - [x] **Copy gog to VPS + Docker container** — Config/keyring copied to `/root/.config/gogcli/`, binary mounted into container via `docker-compose.override.yml`. All 6 Google services working from inside container *(2026-02-22)*
 - [x] **Add secrets handling security rules** — Global `~/.claude/CLAUDE.md`, project `.claude/CLAUDE.md`, TODO.md header, and project memory all updated *(2026-02-22)*
+- [x] **Create push-to-VPS deploy script** — `mhive-ops/deploy-vps.sh` with `--skip-push` and `--skip-build` flags. Pushes to GitHub → pulls on VPS → rebuilds Docker → restarts gateway *(2026-02-22)*
+- [x] **Update `mhive-ops/approve-device.sh` IP** — Changed from old public IP `76.13.79.239` to Tailscale IP `100.71.224.113` *(2026-02-22)*
+- [x] **Fix maple-proxy health check** — Added maple-proxy service to `docker-compose.override.yml` on VPS with corrected health check on port 3000. Container now reports healthy *(2026-02-22)*
 
 ---
 
@@ -65,14 +68,7 @@
   - ElevenLabs Talk API Key (regenerate in ElevenLabs dashboard, update 1Password + VPS)
   - Google OAuth client secret (rotate in Google Cloud Console project 619803175505, update 1Password + gog credentials on both Mac and VPS)
 
-### Medium Priority
-
-- [ ] **Find or create push-to-VPS deploy script** — Check studio for existing script. If not found, create one in `mhive-ops` that does: push to GitHub → SSH to VPS → pull from fork → rebuild Docker → restart gateway.
-- [ ] **Update `mhive-ops/approve-device.sh`** — IP is hardcoded to old address `76.13.79.239`, needs to be updated to Tailscale IP `100.71.224.113`.
-
-### Low Priority
-
-- [ ] **Fix maple-proxy health check** — The upstream image health check curls `localhost:8080` but service listens on 3000. Consider overriding in `docker-compose.yml`.
+*(No remaining items — rotate exposed secrets above when ready.)*
 
 ---
 
