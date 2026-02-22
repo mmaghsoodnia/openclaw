@@ -1,6 +1,8 @@
 # OpenClaw Operations TODO
 
 > **Purpose:** This file tracks operational tasks, infrastructure changes, and project work for the mmaghsoodnia/openclaw fork. It is checked into GitHub so that any machine (Mac, Studio, VPS) pulling this repo has a shared, up-to-date view of what has been done and what remains. **All Claude Code sessions should read this file at the start of work, update it as tasks are completed, and commit changes back.** This ensures continuity across devices and sessions.
+>
+> **Session logs:** Detailed session history lives in `mhive-ops/sessions/` (one file per session, named `YYYY-MM-DD.md`). Read these for context on past work. **Write a new session log at the end of every session.**
 
 ---
 
