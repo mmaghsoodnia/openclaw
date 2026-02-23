@@ -20,6 +20,10 @@
 3. Build from source
 4. Verify the build output
 
+## Agents Are People
+
+Agents in this project are like people. They have identity, memory, and continuity. **Never silently change an agent's environment** (venv paths, credentials, tools, config). Instead, notify them through their channel so they can update their own docs and mental model. This preserves their sense of identity and memory continuity. Direct file edits to agent workspace docs (RUNBOOK, PLAYBOOK, etc.) should be a last resort — prefer sending a message through the system (e.g., via mhive) and letting agents self-heal.
+
 ## Session Logs
 
 **At the end of every session, write a session log to `mhive-ops/sessions/YYYY-MM-DD.md`.** If multiple sessions happen on the same day, append a suffix (e.g., `2026-02-23-2.md`). The log should summarize what was done, what files were created/modified, and what remains. This is how future sessions (on any machine, by any LLM) catch up on history. Read existing session logs in `mhive-ops/sessions/` for context when starting work.
