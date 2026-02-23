@@ -59,6 +59,10 @@
 - [x] **Create push-to-VPS deploy script** — `mhive-ops/deploy-vps.sh` with `--skip-push` and `--skip-build` flags. Pushes to GitHub → pulls on VPS → rebuilds Docker → restarts gateway *(2026-02-22)*
 - [x] **Update `mhive-ops/approve-device.sh` IP** — Changed from old public IP `76.13.79.239` to Tailscale IP `100.71.224.113` *(2026-02-22)*
 - [x] **Fix maple-proxy health check** — Added maple-proxy service to `docker-compose.override.yml` on VPS with corrected health check on port 3000. Container now reports healthy *(2026-02-22)*
+- [x] **Move project to `~/Projects/openclaw/`** — Relocated from `~/openclaw/` to correct path, merged `.claude` configs, verified git integrity *(2026-02-22)*
+- [x] **Install Node.js + pnpm on Mac** — Node.js 22.22.0 via Homebrew, pnpm 10.23.0 via corepack *(2026-02-22)*
+- [x] **Verify local build + gateway** — `pnpm install` + `pnpm build` clean. Gateway tested in isolated mode (no channels, no agents) — HTTP 200 confirmed *(2026-02-22)*
+- [x] **Fix PolyHive Polymarket betting** — Root cause: Python venv built with 3.14 on Mac Studio, container has 3.11. Fix: rebuilt venv inside Docker container, migrated Polymarket credentials to 1Password ("Polymarket Wallet" + "Polymarket API" items), created `.env.tpl` for `op inject`, redacted hardcoded private key from Trader RUNBOOK. Verified: `py_clob_client` import, market scanner (8 leagues, 113 events), wallet check (CLOB API connected, found live orders). Agent self-heal message sent via mhive. *(2026-02-23)*
 
 ---
 
@@ -70,7 +74,13 @@
   - ElevenLabs Talk API Key (regenerate in ElevenLabs dashboard, update 1Password + VPS)
   - Google OAuth client secret (rotate in Google Cloud Console project 619803175505, update 1Password + gog credentials on both Mac and VPS)
 
-*(No remaining items — rotate exposed secrets above when ready.)*
+- [ ] **Make Python venv persistent in Docker** — The venv was rebuilt inside the running container via `docker exec` and will be lost on container rebuild. Need to either add Python deps (`python3-pip python3-venv py-clob-client python-dotenv requests`) to the Dockerfile/startup script, or persist the venv via a named volume.
+- [ ] **Connect WhatsApp channel** — Set up WhatsApp integration for the agents (via Baileys/WhatsApp Web)
+- [ ] **Enable voice channels for agents** — Agents should be able to make and receive voice calls on:
+  - WhatsApp voice calls
+  - Telegram voice calls
+  - Regular phone calls (PSTN)
+  - Use ElevenLabs voices for agent speech synthesis
 
 ---
 
@@ -78,6 +88,10 @@
 
 - **Deployment flow:** Mac/Studio → push to `mmaghsoodnia/openclaw` on GitHub → VPS pulls from `origin` (our fork) → rebuild Docker → restart gateway. Never pull upstream directly on VPS.
 - **Agent system (The Hive):** 14 agents configured — main + 8 PolyHive agents + 5 BookHive agents. Primary model: `xai/grok-4-1-fast`.
+- **Local dev (Mac):** Project at `~/Projects/openclaw/`, Node.js 22.22.0 (`/opt/homebrew/opt/node@22/bin`), pnpm 10.23.0 via corepack.
 - **VPS specs:** 31 GB RAM, 387 GB disk (5% used), 4 days uptime as of 2026-02-22.
 - **Docker override on VPS:** `/root/openclaw/docker-compose.override.yml` mounts gog binary and config into containers, passes `GOG_KEYRING_PASSWORD` from `.env`.
 - **Security incident (2026-02-22):** ElevenLabs API key and Google OAuth client_id/secret were exposed in Claude Code context. Keys should be rotated. This led to the security rule at the top of this file.
+- **Polymarket 1Password items (2026-02-23):** "Polymarket Wallet" (private_key, funder_address, chain_id, signature_type) and "Polymarket API" (host, gamma_api_base_url). `.env.tpl` on VPS at `/root/.openclaw/workspace/the-hive/.env.tpl` — regenerate `.env` via `op inject --account my.1password.com -i .env.tpl -o .env`.
+- **Python venv ephemeral (2026-02-23):** The venv at `/root/.openclaw/workspace/the-hive/venv/` was built inside the Docker container (`docker exec`). It will be lost if the container is recreated. `python3-pip` and `python3-venv` were also installed via `apt-get` inside the container and are equally ephemeral.
+- **Pre-existing Polymarket issues (2026-02-23):** Wallet address and funder address don't match (may indicate proxy/safe setup), zero USDC balance. Neither was caused by the VPS migration.
