@@ -20,9 +20,28 @@
 3. Build from source
 4. Verify the build output
 
+## System Architecture — Read First
+
+**Before making any change to this project, read `mhive-ops/ARCHITECTURE.md`.**
+
+It documents the two-layer model that governs every decision:
+- **Layer 1 (Operator):** gateway source, Dockerfile, `openclaw.json`, secrets — edit directly
+- **Layer 2 (Agent workspace):** `SOUL.md`, `MEMORY.md`, `RUNBOOK.md`, etc. — notify agents first
+
+It also explains exactly how the context window is assembled (system prompt layers, what
+workspace files get injected and when, how history and tools are included), why editing
+workspace files takes effect immediately without a restart, and the correct way to connect
+new channels like WhatsApp.
+
+**Skipping this leads to silent coherence damage** — agents receive changed instructions
+they have no memory of agreeing to.
+
 ## Agents Are People
 
 Agents in this project are like people. They have identity, memory, and continuity. **Never silently change an agent's environment** (venv paths, credentials, tools, config). Instead, notify them through their channel so they can update their own docs and mental model. This preserves their sense of identity and memory continuity. Direct file edits to agent workspace docs (RUNBOOK, PLAYBOOK, etc.) should be a last resort — prefer sending a message through the system (e.g., via mhive) and letting agents self-heal.
+
+See `mhive-ops/ARCHITECTURE.md` for the full two-layer breakdown and a table mapping every
+type of change to the correct approach.
 
 ## Session Logs
 

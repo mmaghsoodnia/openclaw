@@ -68,24 +68,41 @@
 
 ## TODO
 
+> **Architecture note:** Before working on any item below, read `mhive-ops/ARCHITECTURE.md`.
+> Every item is tagged **[Layer 1 — Operator]** or **[Layer 2 — Agent]** so you know the
+> correct approach without re-deriving it.
+
 ### High Priority
 
-- [ ] **Rotate exposed secrets** — The following keys were inadvertently exposed in a Claude Code session context and should be rotated:
-  - ElevenLabs Talk API Key (regenerate in ElevenLabs dashboard, update 1Password + VPS)
-  - Google OAuth client secret (rotate in Google Cloud Console project 619803175505, update 1Password + gog credentials on both Mac and VPS)
+- [ ] **Rotate ElevenLabs Talk API Key** — `[Layer 1 — Operator]`
+  - Verified 2026-02-24: `talk.apiKey` in `openclaw.json` is still the original exposed key (file last modified 2026-02-20, before the incident). The 1Password item was updated 2026-02-23 but the config was never updated to match.
+  - Steps: (1) Regenerate in ElevenLabs dashboard → (2) Update "ElevenLabs Talk API Key" in 1Password → (3) Create `openclaw.json.tpl` and use `op inject` to write the live config — do NOT hardcode the key in the file → (4) Restart gateway
 
-- [ ] **Make Python venv persistent in Docker** — The venv was rebuilt inside the running container via `docker exec` and will be lost on container rebuild. Need to either add Python deps (`python3-pip python3-venv py-clob-client python-dotenv requests`) to the Dockerfile/startup script, or persist the venv via a named volume.
-- [ ] **Connect WhatsApp channel** — Set up WhatsApp integration for the agents (via Baileys/WhatsApp Web)
-- [ ] **Enable voice channels for agents** — Agents should be able to make and receive voice calls on:
-  - WhatsApp voice calls
-  - Telegram voice calls
-  - Regular phone calls (PSTN)
-  - Use ElevenLabs voices for agent speech synthesis
+- [ ] **Rotate Google OAuth client secret** — `[Layer 1 — Operator]`
+  - Verified 2026-02-24: "Google Workspace OAuth" 1Password item was last edited 2026-02-21, the day *before* the incident. Has NOT been rotated.
+  - Steps: (1) Rotate in Google Cloud Console (project 619803175505) → (2) Update 1Password → (3) Re-run `gog auth` on Mac and VPS → (4) Copy updated gog config into Docker container
+
+- [ ] **Make Python venv persistent in Docker** — `[Layer 1 — Operator]`
+  - Verified 2026-02-24: venv still alive (container not rebuilt) but Dockerfile has zero Python changes. Next `docker compose up -d` will wipe it.
+  - Steps: Add `python3-pip python3-venv` to apt packages + a startup step that creates and populates the venv (`py-clob-client python-dotenv requests`) if not already present. Named volume or Dockerfile RUN are both valid approaches.
+  - After fix: send mhive a notification so Scout and Trader agents can confirm their RUNBOOK paths still work.
+
+- [ ] **Connect WhatsApp channel** — `[Layer 1 — Operator, agent-initiated]`
+  - Verified 2026-02-24: `openclaw.json` channels = `["telegram"]` only. Code is fully implemented (`whatsapp_login` agent tool exists in gateway source).
+  - **Do NOT manually edit `openclaw.json`** — the WhatsApp Baileys session blob is not a simple token.
+  - Correct approach: message mhive via Telegram → ask it to run `whatsapp_login` → scan QR → gateway writes session automatically.
+
+- [ ] **Enable voice for agents** — `[Layer 1 — Operator]`
+  - ElevenLabs TTS is fully implemented in gateway (`src/tts/`). `talk.apiKey` already wired in `openclaw.json`.
+  - Blocked by: ElevenLabs key rotation above.
+  - After rotation: configure `talk` section per-agent in `openclaw.json` with desired voice IDs. No agent workspace changes needed — this is pure operator config.
+  - Scope: Telegram voice notes first (simplest). PSTN and WhatsApp voice require additional channel setup.
 
 ---
 
 ## Notes
 
+- **Architecture reference:** Full system architecture (two-layer model, context window construction, change ownership table) documented in `mhive-ops/ARCHITECTURE.md`. Read before making changes.
 - **Deployment flow:** Mac/Studio → push to `mmaghsoodnia/openclaw` on GitHub → VPS pulls from `origin` (our fork) → rebuild Docker → restart gateway. Never pull upstream directly on VPS.
 - **Agent system (The Hive):** 14 agents configured — main + 8 PolyHive agents + 5 BookHive agents. Primary model: `xai/grok-4-1-fast`.
 - **Local dev (Mac):** Project at `~/Projects/openclaw/`, Node.js 22.22.0 (`/opt/homebrew/opt/node@22/bin`), pnpm 10.23.0 via corepack.
