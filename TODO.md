@@ -64,6 +64,7 @@
 - [x] **Verify local build + gateway** — `pnpm install` + `pnpm build` clean. Gateway tested in isolated mode (no channels, no agents) — HTTP 200 confirmed *(2026-02-22)*
 - [x] **Fix PolyHive Polymarket betting** — Root cause: Python venv built with 3.14 on Mac Studio, container has 3.11. Fix: rebuilt venv inside Docker container, migrated Polymarket credentials to 1Password ("Polymarket Wallet" + "Polymarket API" items), created `.env.tpl` for `op inject`, redacted hardcoded private key from Trader RUNBOOK. Verified: `py_clob_client` import, market scanner (8 leagues, 113 events), wallet check (CLOB API connected, found live orders). Agent self-heal message sent via mhive. *(2026-02-23)*
 - [x] **Rotate ElevenLabs Talk API Key** — Regenerated in ElevenLabs dashboard, updated in 1Password, injected into openclaw.json via `op inject`. *(2026-02-24)*
+- [x] **Rotate Google OAuth client secret** — Rotated in Google Cloud Console, updated in 1Password, re-authenticated via `gog auth`. *(2026-02-24)*
 
 ---
 
@@ -74,10 +75,6 @@
 > correct approach without re-deriving it.
 
 ### High Priority
-
-- [ ] **Rotate Google OAuth client secret** — `[Layer 1 — Operator]`
-  - Verified 2026-02-24: "Google Workspace OAuth" 1Password item was last edited 2026-02-21, the day *before* the incident. Has NOT been rotated.
-  - Steps: (1) Rotate in Google Cloud Console (project 619803175505) → (2) Update 1Password → (3) Re-run `gog auth` on Mac and VPS → (4) Copy updated gog config into Docker container
 
 - [ ] **Make Python venv persistent in Docker** — `[Layer 1 — Operator]`
   - Verified 2026-02-24: venv still alive (container not rebuilt) but Dockerfile has zero Python changes. Next `docker compose up -d` will wipe it.
