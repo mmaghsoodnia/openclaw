@@ -65,6 +65,7 @@
 - [x] **Fix PolyHive Polymarket betting** — Root cause: Python venv built with 3.14 on Mac Studio, container has 3.11. Fix: rebuilt venv inside Docker container, migrated Polymarket credentials to 1Password ("Polymarket Wallet" + "Polymarket API" items), created `.env.tpl` for `op inject`, redacted hardcoded private key from Trader RUNBOOK. Verified: `py_clob_client` import, market scanner (8 leagues, 113 events), wallet check (CLOB API connected, found live orders). Agent self-heal message sent via mhive. *(2026-02-23)*
 - [x] **Rotate ElevenLabs Talk API Key** — Regenerated in ElevenLabs dashboard, updated in 1Password, injected into openclaw.json via `op inject`. *(2026-02-24)*
 - [x] **Rotate Google OAuth client secret** — Rotated in Google Cloud Console, updated in 1Password, re-authenticated via `gog auth`. *(2026-02-24)*
+- [x] **Make Python venv persistent in Docker** — Added `python3-pip python3-venv` to Dockerfile (committed to fork). Created `requirements.txt` in the-hive workspace with pinned versions. Added startup venv health-check wrapper to `docker-compose.override.yml` on VPS — gateway auto-bootstraps venv if missing/broken. Redeployed and verified. *(2026-02-24)*
 
 ---
 
@@ -75,11 +76,6 @@
 > correct approach without re-deriving it.
 
 ### High Priority
-
-- [ ] **Make Python venv persistent in Docker** — `[Layer 1 — Operator]`
-  - Verified 2026-02-24: venv still alive (container not rebuilt) but Dockerfile has zero Python changes. Next `docker compose up -d` will wipe it.
-  - Steps: Add `python3-pip python3-venv` to apt packages + a startup step that creates and populates the venv (`py-clob-client python-dotenv requests`) if not already present. Named volume or Dockerfile RUN are both valid approaches.
-  - After fix: send mhive a notification so Scout and Trader agents can confirm their RUNBOOK paths still work.
 
 - [ ] **Connect WhatsApp channel** — `[Layer 1 — Operator, agent-initiated]`
   - Verified 2026-02-24: `openclaw.json` channels = `["telegram"]` only. Code is fully implemented (`whatsapp_login` agent tool exists in gateway source).
