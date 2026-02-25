@@ -11,6 +11,7 @@
 **NEVER read, display, or pull secret values (API keys, tokens, passwords, credentials) into the conversation context.** All conversation content transits Anthropic's API servers. Exposing secrets in the context window means they leave the local machine.
 
 **Safe patterns — always use these:**
+
 - `op read "op://OpenClaw/ItemName/field"` piped directly into target commands/files
 - `op inject` to template secrets into config files without exposing values
 - `op run` to inject secrets as environment variables into a subprocess
@@ -39,33 +40,33 @@
 
 ## Completed
 
-- [x] **Install gh CLI on Mac** — Homebrew + gh installed and authenticated as `mmaghsoodnia` *(2026-02-22)*
-- [x] **Clone openclaw fork to Mac** — `~/openclaw` *(2026-02-22)*
-- [x] **Set up SSH to VPS from Mac** — Generated ed25519 key, added to `root@100.71.224.113` *(2026-02-22)*
-- [x] **Fix maple-proxy unhealthy status** — Restarted container; health check is a cosmetic issue in upstream image. Proxy responds 200. *(2026-02-22)*
-- [x] **Update OpenClaw on VPS** — CLI updated from `2026.2.15` → `2026.2.21-2`, Docker image rebuilt from fork code *(2026-02-22)*
-- [x] **Fix VPS git remotes** — Changed `origin` from upstream to `mmaghsoodnia/openclaw`, kept upstream as `upstream` *(2026-02-22)*
-- [x] **Sync VPS with fork** — Pulled latest from `origin/main`, rebuilt Docker image, restarted gateway. All 3 Telegram bots running *(2026-02-22)*
-- [x] **Fix missing memory files** — Created hive-risk daily memory and heartbeat-state.json *(2026-02-22)*
-- [x] **Move confidential keys to 1Password vault "openclaw"** — All API keys migrated (13 items total) *(2026-02-22)*
-- [x] **Install 1Password CLI on Mac and VPS** — `op` v2.32.1 on both. Mac: desktop app integration. VPS: service account token *(2026-02-22)*
-- [x] **Set up 1Password service account for VPS** — Token stored at `/root/.op-service-account-token` (600 perms), loaded via `.bashrc`/`.profile`. Headless access to OpenClaw vault confirmed *(2026-02-22)*
-- [x] **Install gog CLI (built from source)** — Security audit passed (all deps legitimate, no backdoors). Built from source v0.11.0 on VPS. Homebrew on Mac *(2026-02-22)*
-- [x] **Set up gog with file keyring + 1Password** — No keychain/biometric prompts. `GOG_KEYRING_PASSWORD` injected from 1Password at runtime *(2026-02-22)*
-- [x] **Authenticate gog for mhive@bigbraincap.com** — OAuth completed with Gmail, Calendar, Drive, Contacts, Docs, Sheets scopes *(2026-02-22)*
-- [x] **Enable Google APIs** — Calendar, Contacts (People), Sheets, Docs APIs enabled in Google Cloud project. All 6 services confirmed working *(2026-02-22)*
-- [x] **Copy gog to VPS + Docker container** — Config/keyring copied to `/root/.config/gogcli/`, binary mounted into container via `docker-compose.override.yml`. All 6 Google services working from inside container *(2026-02-22)*
-- [x] **Add secrets handling security rules** — Global `~/.claude/CLAUDE.md`, project `.claude/CLAUDE.md`, TODO.md header, and project memory all updated *(2026-02-22)*
-- [x] **Create push-to-VPS deploy script** — `mhive-ops/deploy-vps.sh` with `--skip-push` and `--skip-build` flags. Pushes to GitHub → pulls on VPS → rebuilds Docker → restarts gateway *(2026-02-22)*
-- [x] **Update `mhive-ops/approve-device.sh` IP** — Changed from old public IP `76.13.79.239` to Tailscale IP `100.71.224.113` *(2026-02-22)*
-- [x] **Fix maple-proxy health check** — Added maple-proxy service to `docker-compose.override.yml` on VPS with corrected health check on port 3000. Container now reports healthy *(2026-02-22)*
-- [x] **Move project to `~/Projects/openclaw/`** — Relocated from `~/openclaw/` to correct path, merged `.claude` configs, verified git integrity *(2026-02-22)*
-- [x] **Install Node.js + pnpm on Mac** — Node.js 22.22.0 via Homebrew, pnpm 10.23.0 via corepack *(2026-02-22)*
-- [x] **Verify local build + gateway** — `pnpm install` + `pnpm build` clean. Gateway tested in isolated mode (no channels, no agents) — HTTP 200 confirmed *(2026-02-22)*
-- [x] **Fix PolyHive Polymarket betting** — Root cause: Python venv built with 3.14 on Mac Studio, container has 3.11. Fix: rebuilt venv inside Docker container, migrated Polymarket credentials to 1Password ("Polymarket Wallet" + "Polymarket API" items), created `.env.tpl` for `op inject`, redacted hardcoded private key from Trader RUNBOOK. Verified: `py_clob_client` import, market scanner (8 leagues, 113 events), wallet check (CLOB API connected, found live orders). Agent self-heal message sent via mhive. *(2026-02-23)*
-- [x] **Rotate ElevenLabs Talk API Key** — Regenerated in ElevenLabs dashboard, updated in 1Password, injected into openclaw.json via `op inject`. *(2026-02-24)*
-- [x] **Rotate Google OAuth client secret** — Rotated in Google Cloud Console, updated in 1Password, re-authenticated via `gog auth`. *(2026-02-24)*
-- [x] **Make Python venv persistent in Docker** — Added `python3-pip python3-venv` to Dockerfile (committed to fork). Created `requirements.txt` in the-hive workspace with pinned versions. Added startup venv health-check wrapper to `docker-compose.override.yml` on VPS — gateway auto-bootstraps venv if missing/broken. Redeployed and verified. *(2026-02-24)*
+- [x] **Install gh CLI on Mac** — Homebrew + gh installed and authenticated as `mmaghsoodnia` _(2026-02-22)_
+- [x] **Clone openclaw fork to Mac** — `~/openclaw` _(2026-02-22)_
+- [x] **Set up SSH to VPS from Mac** — Generated ed25519 key, added to `root@100.71.224.113` _(2026-02-22)_
+- [x] **Fix maple-proxy unhealthy status** — Restarted container; health check is a cosmetic issue in upstream image. Proxy responds 200. _(2026-02-22)_
+- [x] **Update OpenClaw on VPS** — CLI updated from `2026.2.15` → `2026.2.21-2`, Docker image rebuilt from fork code _(2026-02-22)_
+- [x] **Fix VPS git remotes** — Changed `origin` from upstream to `mmaghsoodnia/openclaw`, kept upstream as `upstream` _(2026-02-22)_
+- [x] **Sync VPS with fork** — Pulled latest from `origin/main`, rebuilt Docker image, restarted gateway. All 3 Telegram bots running _(2026-02-22)_
+- [x] **Fix missing memory files** — Created hive-risk daily memory and heartbeat-state.json _(2026-02-22)_
+- [x] **Move confidential keys to 1Password vault "openclaw"** — All API keys migrated (13 items total) _(2026-02-22)_
+- [x] **Install 1Password CLI on Mac and VPS** — `op` v2.32.1 on both. Mac: desktop app integration. VPS: service account token _(2026-02-22)_
+- [x] **Set up 1Password service account for VPS** — Token stored at `/root/.op-service-account-token` (600 perms), loaded via `.bashrc`/`.profile`. Headless access to OpenClaw vault confirmed _(2026-02-22)_
+- [x] **Install gog CLI (built from source)** — Security audit passed (all deps legitimate, no backdoors). Built from source v0.11.0 on VPS. Homebrew on Mac _(2026-02-22)_
+- [x] **Set up gog with file keyring + 1Password** — No keychain/biometric prompts. `GOG_KEYRING_PASSWORD` injected from 1Password at runtime _(2026-02-22)_
+- [x] **Authenticate gog for mhive@bigbraincap.com** — OAuth completed with Gmail, Calendar, Drive, Contacts, Docs, Sheets scopes _(2026-02-22)_
+- [x] **Enable Google APIs** — Calendar, Contacts (People), Sheets, Docs APIs enabled in Google Cloud project. All 6 services confirmed working _(2026-02-22)_
+- [x] **Copy gog to VPS + Docker container** — Config/keyring copied to `/root/.config/gogcli/`, binary mounted into container via `docker-compose.override.yml`. All 6 Google services working from inside container _(2026-02-22)_
+- [x] **Add secrets handling security rules** — Global `~/.claude/CLAUDE.md`, project `.claude/CLAUDE.md`, TODO.md header, and project memory all updated _(2026-02-22)_
+- [x] **Create push-to-VPS deploy script** — `mhive-ops/deploy-vps.sh` with `--skip-push` and `--skip-build` flags. Pushes to GitHub → pulls on VPS → rebuilds Docker → restarts gateway _(2026-02-22)_
+- [x] **Update `mhive-ops/approve-device.sh` IP** — Changed from old public IP `76.13.79.239` to Tailscale IP `100.71.224.113` _(2026-02-22)_
+- [x] **Fix maple-proxy health check** — Added maple-proxy service to `docker-compose.override.yml` on VPS with corrected health check on port 3000. Container now reports healthy _(2026-02-22)_
+- [x] **Move project to `~/Projects/openclaw/`** — Relocated from `~/openclaw/` to correct path, merged `.claude` configs, verified git integrity _(2026-02-22)_
+- [x] **Install Node.js + pnpm on Mac** — Node.js 22.22.0 via Homebrew, pnpm 10.23.0 via corepack _(2026-02-22)_
+- [x] **Verify local build + gateway** — `pnpm install` + `pnpm build` clean. Gateway tested in isolated mode (no channels, no agents) — HTTP 200 confirmed _(2026-02-22)_
+- [x] **Fix PolyHive Polymarket betting** — Root cause: Python venv built with 3.14 on Mac Studio, container has 3.11. Fix: rebuilt venv inside Docker container, migrated Polymarket credentials to 1Password ("Polymarket Wallet" + "Polymarket API" items), created `.env.tpl` for `op inject`, redacted hardcoded private key from Trader RUNBOOK. Verified: `py_clob_client` import, market scanner (8 leagues, 113 events), wallet check (CLOB API connected, found live orders). Agent self-heal message sent via mhive. _(2026-02-23)_
+- [x] **Rotate ElevenLabs Talk API Key** — Regenerated in ElevenLabs dashboard, updated in 1Password, injected into openclaw.json via `op inject`. _(2026-02-24)_
+- [x] **Rotate Google OAuth client secret** — Rotated in Google Cloud Console, updated in 1Password, re-authenticated via `gog auth`. _(2026-02-24)_
+- [x] **Make Python venv persistent in Docker** — Added `python3-pip python3-venv` to Dockerfile (committed to fork). Created `requirements.txt` in the-hive workspace with pinned versions. Added startup venv health-check wrapper to `docker-compose.override.yml` on VPS — gateway auto-bootstraps venv if missing/broken. Redeployed and verified. _(2026-02-24)_
 
 ---
 
@@ -77,10 +78,11 @@
 
 ### High Priority
 
-- [ ] **Connect WhatsApp channel** — `[Layer 1 — Operator, agent-initiated]`
-  - Verified 2026-02-24: `openclaw.json` channels = `["telegram"]` only. Code is fully implemented (`whatsapp_login` agent tool exists in gateway source).
-  - **Do NOT manually edit `openclaw.json`** — the WhatsApp Baileys session blob is not a simple token.
-  - Correct approach: message mhive via Telegram → ask it to run `whatsapp_login` → scan QR → gateway writes session automatically.
+- [ ] **Re-enable WhatsApp channel (currently disabled)** — `[Layer 1 — Operator]`
+  - **Disabled 2026-02-25** due to security issues: default `dmPolicy: "pairing"` caused bot to auto-reply pairing codes to random contacts ([Issue #834](https://github.com/openclaw/openclaw/issues/834)), and allowlist bypass via persisted pairings ([Issue #22599](https://github.com/openclaw/openclaw/issues/22599)).
+  - Baileys session still exists at `/root/.openclaw/credentials/whatsapp/default/`. Plugin disabled in `plugins.entries.whatsapp.enabled = false`, channel set to `dmPolicy: "disabled"`.
+  - **Before re-enabling:** verify Issues #22599 and #25975 are fixed upstream, merge fixes into fork, use a dedicated number (not personal), and set `dmPolicy: "allowlist"`.
+  - 1Password item "OpenClaw WhatsApp" (credential field) stores the allowFrom number for when this is re-enabled.
 
 - [ ] **Enable voice for agents** — `[Layer 1 — Operator]`
   - ElevenLabs TTS is fully implemented in gateway (`src/tts/`). `talk.apiKey` wired in `openclaw.json`.

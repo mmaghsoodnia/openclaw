@@ -1,0 +1,42 @@
+## Local staging override — mirrors VPS docker-compose.override.yml
+## Usage: docker compose --env-file .env.staging -f docker-compose.yml -f docker-compose.staging.yml up -d
+services:
+  openclaw-gateway:
+    command:
+      - bash
+      - -c
+      - |
+        VENV=/home/node/.openclaw/workspace/the-hive/venv
+        if ! $$VENV/bin/python3 -c 'import py_clob_client' 2>/dev/null; then
+          echo '[startup] Python venv missing or broken -- bootstrapping'
+          python3 -m venv $$VENV && $$VENV/bin/pip install --quiet \
+            -r /home/node/.openclaw/workspace/the-hive/requirements.txt \
+            || echo '[startup] venv bootstrap FAILED -- Python agent scripts will not work'
+        fi
+        exec node dist/index.js gateway --bind $${OPENCLAW_GATEWAY_BIND:-loopback} --port 18789
+    environment:
+      GOG_KEYRING_PASSWORD: ${GOG_KEYRING_PASSWORD}
+      GOG_ACCOUNT: ${GOG_ACCOUNT:-mhive@bigbraincap.com}
+    volumes:
+      # gog CLI (copied to staging dir — Docker Desktop can't mount /opt/homebrew)
+      - ${HOME}/.openclaw-staging/bin/gog:/usr/local/bin/gog:ro
+      - ${HOME}/.config/gogcli:/home/node/.config/gogcli:ro
+    depends_on:
+      maple-proxy:
+        condition: service_started
+
+  maple-proxy:
+    image: ghcr.io/opensecretcloud/maple-proxy:latest
+    environment:
+      MAPLE_BACKEND_URL: https://enclave.trymaple.ai
+      MAPLE_PORT: "3000"
+      MAPLE_HOST: "0.0.0.0"
+    ports:
+      - "127.0.0.1:8080:3000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
