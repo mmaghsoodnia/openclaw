@@ -67,6 +67,9 @@
 - [x] **Rotate ElevenLabs Talk API Key** — Regenerated in ElevenLabs dashboard, updated in 1Password, injected into openclaw.json via `op inject`. _(2026-02-24)_
 - [x] **Rotate Google OAuth client secret** — Rotated in Google Cloud Console, updated in 1Password, re-authenticated via `gog auth`. _(2026-02-24)_
 - [x] **Make Python venv persistent in Docker** — Added `python3-pip python3-venv` to Dockerfile (committed to fork). Created `requirements.txt` in the-hive workspace with pinned versions. Added startup venv health-check wrapper to `docker-compose.override.yml` on VPS — gateway auto-bootstraps venv if missing/broken. Redeployed and verified. _(2026-02-24)_
+- [x] **Disable WhatsApp channel** — Emergency fix after bot sent unsolicited pairing messages to contacts. Disabled both plugin and channel config on VPS. Baileys session preserved. See session log `2026-02-25.md`. _(2026-02-25)_
+- [x] **Set up local staging environment** — Full Docker staging on Mac mirroring VPS. Scripts in `mhive-ops/staging/` (start/stop/rebuild/sync). Staging Telegram bot `@mhive_stage_bot` verified working end-to-end. _(2026-02-25)_
+- [x] **Merge upstream/main into fork** — Updated fork from v2026.2.18 to latest upstream (2286 commits). Resolved Dockerfile conflict (kept python3-pip + upstream --chown). _(2026-02-25)_
 
 ---
 
@@ -77,6 +80,10 @@
 > correct approach without re-deriving it.
 
 ### High Priority
+
+- [ ] **Update VPS to latest fork** — `[Layer 1 — Operator]`
+  - Fork pushed to GitHub with upstream merge + staging scripts. VPS needs `git pull && docker build && docker compose restart`.
+  - Tailscale must be running on Mac for SSH access to VPS.
 
 - [ ] **Re-enable WhatsApp channel (currently disabled)** — `[Layer 1 — Operator]`
   - **Disabled 2026-02-25** due to security issues: default `dmPolicy: "pairing"` caused bot to auto-reply pairing codes to random contacts ([Issue #834](https://github.com/openclaw/openclaw/issues/834)), and allowlist bypass via persisted pairings ([Issue #22599](https://github.com/openclaw/openclaw/issues/22599)).
