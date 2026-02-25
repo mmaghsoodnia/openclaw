@@ -71,8 +71,14 @@ def main():
     # --- Gateway ---
     gateway = cfg.setdefault("gateway", {})
     # Remove gateway.bind from config — handled by CLI --bind flag via env var.
-    # Older image versions don't have this field in the config schema.
     gateway.pop("bind", None)
+
+    # Control UI: allow localhost origins for non-loopback bind inside Docker
+    control_ui = gateway.setdefault("controlUi", {})
+    control_ui["allowedOrigins"] = [
+        "http://localhost:18789",
+        "http://127.0.0.1:18789",
+    ]
 
     # Override gateway auth token if provided
     if staging_gw_token:

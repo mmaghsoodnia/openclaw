@@ -13,7 +13,7 @@ services:
             -r /home/node/.openclaw/workspace/the-hive/requirements.txt \
             || echo '[startup] venv bootstrap FAILED -- Python agent scripts will not work'
         fi
-        exec node dist/index.js gateway --bind $${OPENCLAW_GATEWAY_BIND:-loopback} --port 18789
+        exec node dist/index.js gateway --bind $${OPENCLAW_GATEWAY_BIND:-lan} --port 18789
     environment:
       GOG_KEYRING_PASSWORD: ${GOG_KEYRING_PASSWORD}
       GOG_ACCOUNT: ${GOG_ACCOUNT:-mhive@bigbraincap.com}
