@@ -34,6 +34,8 @@ Setup (once)
 
 Common commands
 
+Gmail
+
 - Gmail search: `gog gmail search 'newer_than:7d' --max 10`
 - Gmail messages search (per email, ignores threading): `gog gmail messages search "in:inbox from:ryanair.com" --max 20 --account you@example.com`
 - Gmail send (plain): `gog gmail send --to a@b.com --subject "Hi" --body "Hello"`
@@ -43,20 +45,74 @@ Common commands
 - Gmail draft: `gog gmail drafts create --to a@b.com --subject "Hi" --body-file ./message.txt`
 - Gmail send draft: `gog gmail drafts send <draftId>`
 - Gmail reply: `gog gmail send --to a@b.com --subject "Re: Hi" --body "Reply" --reply-to-message-id <msgId>`
+
+Calendar
+
 - Calendar list events: `gog calendar events <calendarId> --from <iso> --to <iso>`
 - Calendar create event: `gog calendar create <calendarId> --summary "Title" --from <iso> --to <iso>`
 - Calendar create with color: `gog calendar create <calendarId> --summary "Title" --from <iso> --to <iso> --event-color 7`
 - Calendar update event: `gog calendar update <calendarId> <eventId> --summary "New Title" --event-color 4`
 - Calendar show colors: `gog calendar colors`
+
+Drive
+
+- Drive list files: `gog drive ls` or `gog drive ls --folder <folderId>`
 - Drive search: `gog drive search "query" --max 10`
-- Contacts: `gog contacts list --max 20`
+- Drive create folder: `gog drive mkdir "Folder Name"` or `gog drive mkdir "Folder Name" --parent <folderId>`
+- Drive upload file: `gog drive upload ./file.pdf` or `gog drive upload ./file.pdf --parent <folderId>`
+- Drive download: `gog drive download <fileId> --out ./local-file`
+- Drive move: `gog drive move <fileId> --to <folderId>`
+- Drive rename: `gog drive rename <fileId> "New Name"`
+- Drive copy: `gog drive copy <fileId> "Copy Name"`
+- Drive delete (trash): `gog drive delete <fileId>` or `gog drive delete <fileId> --permanent`
+- Drive share: `gog drive share <fileId> --email a@b.com --role writer`
+- Drive permissions: `gog drive permissions <fileId>`
+- Drive get metadata: `gog drive get <fileId>`
+- Drive URL: `gog drive url <fileId>`
+
+Docs (full CRUD)
+
+- Docs create: `gog docs create "My Document"` or `gog docs create "My Document" --parent <folderId>`
+- Docs create from markdown: `gog docs create "My Document" --file ./content.md`
+- Docs read: `gog docs cat <docId>`
+- Docs write (replace all): `gog docs write <docId> "New content"` or `gog docs write <docId> --file ./content.md`
+- Docs insert at position: `gog docs insert <docId> "Text to insert" --index 1`
+- Docs delete range: `gog docs delete <docId> --start 1 --end 50`
+- Docs find and replace: `gog docs find-replace <docId> "old text" "new text"`
+- Docs export: `gog docs export <docId> --format txt --out /tmp/doc.txt`
+- Docs copy: `gog docs copy <docId> "Copy Title"`
+- Docs info: `gog docs info <docId>`
+- Docs comments: `gog docs comments list <docId>` / `gog docs comments add <docId> "Comment text"`
+
+Sheets (full CRUD)
+
+- Sheets create: `gog sheets create "My Spreadsheet"`
+- Sheets copy: `gog sheets copy <sheetId> "Copy Title"`
 - Sheets get: `gog sheets get <sheetId> "Tab!A1:D10" --json`
 - Sheets update: `gog sheets update <sheetId> "Tab!A1:B2" --values-json '[["A","B"],["1","2"]]' --input USER_ENTERED`
 - Sheets append: `gog sheets append <sheetId> "Tab!A:C" --values-json '[["x","y","z"]]' --insert INSERT_ROWS`
 - Sheets clear: `gog sheets clear <sheetId> "Tab!A2:Z"`
+- Sheets format: `gog sheets format <sheetId> "Tab!A1:D1" --bold --bg-color "#4285F4"`
+- Sheets notes: `gog sheets notes <sheetId> "Tab!A1:D10"`
 - Sheets metadata: `gog sheets metadata <sheetId> --json`
-- Docs export: `gog docs export <docId> --format txt --out /tmp/doc.txt`
-- Docs cat: `gog docs cat <docId>`
+- Sheets export: `gog sheets export <sheetId> --format csv --out /tmp/data.csv`
+
+Slides
+
+- Slides create: `gog slides create "My Presentation"`
+- Slides create from markdown: `gog slides create-from-markdown "My Deck" --file ./slides.md`
+- Slides info: `gog slides info <presentationId>`
+- Slides list: `gog slides list-slides <presentationId>`
+- Slides add image slide: `gog slides add-slide <presentationId> ./image.png --notes "Speaker notes"`
+- Slides read slide: `gog slides read-slide <presentationId> <slideId>`
+- Slides update notes: `gog slides update-notes <presentationId> <slideId> --notes "New notes"`
+- Slides delete: `gog slides delete-slide <presentationId> <slideId>`
+- Slides export: `gog slides export <presentationId> --format pdf --out /tmp/deck.pdf`
+- Slides copy: `gog slides copy <presentationId> "Copy Title"`
+
+Contacts
+
+- Contacts: `gog contacts list --max 20`
 
 Calendar Colors
 
@@ -111,6 +167,6 @@ Notes
 - Set `GOG_ACCOUNT=you@gmail.com` to avoid repeating `--account`.
 - For scripting, prefer `--json` plus `--no-input`.
 - Sheets values can be passed via `--values-json` (recommended) or as inline rows.
-- Docs supports export/cat/copy. In-place edits require a Docs API client (not in gog).
+- Docs supports full CRUD: create, read (cat), write, insert, delete, find-replace, export, copy, comments.
 - Confirm before sending mail or creating events.
 - `gog gmail search` returns one row per thread; use `gog gmail messages search` when you need every individual email returned separately.
