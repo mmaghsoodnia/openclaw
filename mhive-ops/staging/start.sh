@@ -22,7 +22,8 @@ fi
 
 # 2. Generate .env.staging (secrets from 1Password + paths from shell)
 echo "[2/6] Generating .env.staging..."
-op inject --account my.1password.com \
+OP_SERVICE_ACCOUNT_TOKEN=$(<~/.op-service-account-token) \
+  op inject -f --account my.1password.com \
   -i "$SCRIPT_DIR/.env.staging.tpl" \
   -o "$PROJECT_ROOT/.env.staging"
 # Append non-secret env vars (paths, bind address)
