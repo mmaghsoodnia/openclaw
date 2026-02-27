@@ -18,9 +18,11 @@ OPENAI_API_KEY={{ op://OpenClaw/OpenAI API Key/credential }}
 XAI_API_KEY={{ op://OpenClaw/XAI API key/credential }}
 GEMINI_API_KEY={{ op://OpenClaw/Google Gemini API Key/credential }}
 ANTHROPIC_API_KEY={{ op://OpenClaw/Anthropic API Key/credential }}
+MAPLE_API_KEY={{ op://OpenClaw/Maple API Key/credential }}
 
-# --- Tools ---
+# --- Tools & Services ---
 BRAVE_API_KEY={{ op://OpenClaw/Brave API Key/credential }}
+ELEVENLABS_API_KEY={{ op://OpenClaw/ElevenLabs Talk API Key/credential }}
 
 # --- Google Workspace (gog) ---
 GOG_KEYRING_PASSWORD={{ op://OpenClaw/GOG Keyring Password/password }}

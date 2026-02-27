@@ -190,25 +190,22 @@ but should eventually be templated.
 
 ---
 
-## Agent Auth Store — API Keys for LLM Providers (Layer 1)
+## Secrets Management — Zero Hardcoded Keys (Layer 1)
 
-Each agent has its own auth store at `~/.openclaw/agents/<agentId>/agent/auth-profiles.json`.
-This is where LLM provider API keys live.
+**All secrets are injected from 1Password via Docker environment variables.**
+No API keys, tokens, or credentials are stored in files on disk.
 
-### File format
+### How it works
 
-```json
-{
-  "version": 1,
-  "profiles": {
-    "xai:manual":    { "type": "token", "provider": "xai",    "token": "<key>" },
-    "openai:manual": { "type": "token", "provider": "openai", "token": "<key>" },
-    "google:default":{ "type": "token", "provider": "google", "token": "<key>" },
-    "maple:default": { "type": "token", "provider": "maple",  "token": "<key>" }
-  },
-  "lastGood": { "xai": "xai:manual", "openai": "openai:manual", ... },
-  "usageStats": { ... }
-}
+```
+1Password vault "OpenClaw"
+  ↓  (op inject)
+mhive-ops/.env.vps.tpl  →  .env  (on VPS, generated at deploy time)
+  ↓  (docker compose)
+Docker env vars  →  gateway container
+  ↓  (runtime resolution)
+openclaw.json uses ${VAR} refs  →  resolved from env at config load
+agents use env var fallback     →  resolved from env at API call time
 ```
 
 ### Key resolution order (`src/agents/model-auth.ts`)
@@ -216,35 +213,38 @@ This is where LLM provider API keys live.
 When an agent's model specifies a provider (e.g., `xai/grok-4-1-fast`), the gateway
 resolves the API key in this order:
 
-1. **auth-profiles.json** — per-agent file, checked first
+1. **auth-profiles.json** — per-agent file, checked first (currently empty for all agents)
 2. **Environment variables** — `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `XAI_API_KEY`,
-   `GEMINI_API_KEY`, etc. (fallback for all agents)
-3. **Config `apiKey`** — `models.providers[provider].apiKey` in `openclaw.json` (last resort)
-
-This means Docker environment variables provide a global fallback for all agents without
-needing per-agent auth-profiles.json entries.
+   `GEMINI_API_KEY`, etc.
+3. **Config `apiKey`** — `models.providers[provider].apiKey` in `openclaw.json`
+   (uses `${VAR}` env var substitution, not hardcoded values)
 
 ### Current state (as of 2026-02-27)
 
 - **Docker env vars** (injected from 1Password via `mhive-ops/.env.vps.tpl`):
-  `OPENAI_API_KEY`, `XAI_API_KEY`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `BRAVE_API_KEY`
-  — available to all agents as fallback.
-- **Per-agent auth-profiles.json** still exist with keys for: google, maple, openai, xai
-  (entered via `openclaw agents add`). These take priority over env vars.
-- **1Password vault "OpenClaw"** stores all provider keys: Google Gemini, Maple, OpenAI,
-  XAI, Anthropic, and Brave Search.
-- **VPS 1Password access:** service account token at `/root/.op-service-account-token`,
-  `OP_SERVICE_ACCOUNT_TOKEN` exported in `.bashrc`/`.profile`.
-- **VPS `.env` injection:** `op inject -f -i mhive-ops/.env.vps.tpl -o .env` generates the
-  Docker env file with secrets from 1Password. Run after any key rotation.
-- **Staging `.env` injection:** `start.sh` runs `op inject` from `.env.staging.tpl`.
+  `OPENAI_API_KEY`, `XAI_API_KEY`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`,
+  `MAPLE_API_KEY`, `BRAVE_API_KEY`, `ELEVENLABS_API_KEY`
+- **Per-agent auth-profiles.json** are empty — all agents use env var fallback
+- **`openclaw.json`** uses `${VAR}` references for `models.providers.maple.apiKey`
+  and `talk.apiKey` — resolved from env at config load time
+- **1Password vault "OpenClaw"** is the single source of truth for all secrets
+- **VPS 1Password access:** service account token at `/root/.op-service-account-token`
+- **VPS `.env` injection:** `op inject -f -i mhive-ops/.env.vps.tpl -o .env`
+- **Staging `.env` injection:** `start.sh` runs `op inject` from `.env.staging.tpl`
 
-### Adding a new provider key
+### Adding a new secret
 
-1. Add the key to 1Password vault "OpenClaw" (as API_CREDENTIAL type, `credential` field)
-2. Add the `op://` template reference in `mhive-ops/.env.vps.tpl` and `.env.staging.tpl`
-3. Add the env var to `docker-compose.override.yml` (VPS) and `docker-compose.staging.yml`
-4. Re-run `op inject -f` and restart Docker (`docker compose up -d`)
+1. Add to 1Password vault "OpenClaw" (API_CREDENTIAL type, `credential` field)
+2. Add `op://` template reference in `mhive-ops/.env.vps.tpl` and `.env.staging.tpl`
+3. Add env var to `docker-compose.override.yml` (VPS) and `docker-compose.staging.yml`
+4. Re-run `op inject -f` and `docker compose up -d`
+
+### Deploying to a new environment
+
+1. Set up 1Password service account with access to vault "OpenClaw"
+2. Store token at `~/.op-service-account-token`
+3. Copy `mhive-ops/.env.vps.tpl` and run `op inject`
+4. `docker compose up -d` — all secrets resolve from env vars
 
 ---
 
