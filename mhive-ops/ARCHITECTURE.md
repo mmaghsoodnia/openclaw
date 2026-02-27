@@ -114,10 +114,9 @@ TOOLS BLOCK (structured JSON schema, not plain text)
    `## Tooling` as text, and the actual callable schemas in the tools block. These are
    generated fresh every call — not stored in the session file.
 
-5. **Secrets never appear in context.** API keys live in per-agent auth-profiles.json
-   files (see "Agent Auth Store" section). They are never part of the prompt or context
-   window. Keys are in 1Password vault "OpenClaw" but currently entered manually via
-   `openclaw agents add` — no auto-injection script exists yet.
+5. **Secrets never appear in context.** API keys are injected via Docker environment
+   variables from 1Password (see "Secrets Management" section). They are never part of
+   the prompt or context window.
 
 ---
 
@@ -161,8 +160,8 @@ truth for everything the gateway runs. Key sections:
 ```
 meta        — version, name
 wizard      — setup wizard config
-auth        — model auth config (profile names/modes; actual keys are in per-agent
-              auth-profiles.json — see "Agent Auth Store" section below)
+auth        — model auth config (profile names/modes; keys resolve via env vars
+              — see "Secrets Management" section below)
 models      — model aliases and fallbacks
 agents      — agent defaults (model, fallback chain); agent IDs are directory names
               under /root/.openclaw/workspace/
@@ -172,21 +171,15 @@ bindings    — which agent handles which Telegram account
 messages    — message delivery config
 channels    — channel config (currently: telegram only)
              channels.telegram.accounts.{mhive,percy,bookworm} — bot tokens + allowlists
-talk        — TTS config (talk.apiKey = ElevenLabs key — stored here hardcoded,
-              should be templated via op inject)
+talk        — TTS config (talk.apiKey uses ${ELEVENLABS_API_KEY} from env)
 gateway     — HTTP port, auth
 skills      — skill paths
 plugins     — plugin config
 ```
 
-**The `talk.apiKey` problem:** As of 2026-02-23, the ElevenLabs API key is hardcoded in
-`openclaw.json` rather than loaded via `op inject`. This is the exposed key that needs
-rotation. The fix is: rotate in ElevenLabs dashboard → update 1Password → inject via
-`op inject` template → rebuild openclaw.json from template.
-
-**Telegram bot tokens** are also hardcoded in `openclaw.json`. These are in the channels
-config, not in 1Password. They are less sensitive (bot-only, not account credentials)
-but should eventually be templated.
+**Telegram bot tokens** are hardcoded in `openclaw.json` (in the channels config).
+They are less sensitive (bot-only, not account credentials) but should eventually be
+templated via 1Password.
 
 ---
 
