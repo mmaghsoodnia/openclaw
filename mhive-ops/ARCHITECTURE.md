@@ -114,8 +114,10 @@ TOOLS BLOCK (structured JSON schema, not plain text)
    `## Tooling` as text, and the actual callable schemas in the tools block. These are
    generated fresh every call — not stored in the session file.
 
-5. **Secrets never appear in context.** API keys are resolved from 1Password at runtime
-   and injected into `process.env` or config structs. They are never part of the prompt.
+5. **Secrets never appear in context.** API keys live in per-agent auth-profiles.json
+   files (see "Agent Auth Store" section). They are never part of the prompt or context
+   window. Keys are in 1Password vault "OpenClaw" but currently entered manually via
+   `openclaw agents add` — no auto-injection script exists yet.
 
 ---
 
@@ -159,7 +161,8 @@ truth for everything the gateway runs. Key sections:
 ```
 meta        — version, name
 wizard      — setup wizard config
-auth        — model auth (API keys loaded from env, NOT hardcoded here)
+auth        — model auth config (profile names/modes; actual keys are in per-agent
+              auth-profiles.json — see "Agent Auth Store" section below)
 models      — model aliases and fallbacks
 agents      — agent defaults (model, fallback chain); agent IDs are directory names
               under /root/.openclaw/workspace/
@@ -184,6 +187,71 @@ rotation. The fix is: rotate in ElevenLabs dashboard → update 1Password → in
 **Telegram bot tokens** are also hardcoded in `openclaw.json`. These are in the channels
 config, not in 1Password. They are less sensitive (bot-only, not account credentials)
 but should eventually be templated.
+
+---
+
+## Agent Auth Store — API Keys for LLM Providers (Layer 1)
+
+Each agent has its own auth store at `~/.openclaw/agents/<agentId>/agent/auth-profiles.json`.
+This is where LLM provider API keys live.
+
+### File format
+
+```json
+{
+  "version": 1,
+  "profiles": {
+    "xai:manual":    { "type": "token", "provider": "xai",    "token": "<key>" },
+    "openai:manual": { "type": "token", "provider": "openai", "token": "<key>" },
+    "google:default":{ "type": "token", "provider": "google", "token": "<key>" },
+    "maple:default": { "type": "token", "provider": "maple",  "token": "<key>" }
+  },
+  "lastGood": { "xai": "xai:manual", "openai": "openai:manual", ... },
+  "usageStats": { ... }
+}
+```
+
+### Key resolution order (`src/agents/model-auth.ts`)
+
+When an agent's model specifies a provider (e.g., `xai/grok-4-1-fast`), the gateway
+resolves the API key in this order:
+
+1. **auth-profiles.json** — per-agent file, checked first
+2. **Environment variables** — `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `XAI_API_KEY`,
+   `GEMINI_API_KEY`, etc. (fallback for all agents)
+3. **Config `apiKey`** — `models.providers[provider].apiKey` in `openclaw.json` (last resort)
+
+This means Docker environment variables provide a global fallback for all agents without
+needing per-agent auth-profiles.json entries.
+
+### Current state (as of 2026-02-27)
+
+- **Docker env vars** (injected from 1Password via `mhive-ops/.env.vps.tpl`):
+  `OPENAI_API_KEY`, `XAI_API_KEY`, `GEMINI_API_KEY` — available to all agents as fallback.
+- **Per-agent auth-profiles.json** still exist with keys for: google, maple, openai, xai
+  (entered via `openclaw agents add`). These take priority over env vars.
+- **No Anthropic key** exists anywhere. If an agent/LLM switches to an Anthropic model,
+  it will crash with FailoverError.
+- **1Password vault "OpenClaw"** stores: Google Gemini API Key, Maple API Key, OpenAI API
+  Key, XAI API key. Does NOT have: Anthropic API Key, Brave Search key.
+- **VPS 1Password access:** service account token at `/root/.op-service-account-token`,
+  `OP_SERVICE_ACCOUNT_TOKEN` exported in `.bashrc`/`.profile`.
+- **VPS `.env` injection:** `op inject -i mhive-ops/.env.vps.tpl -o .env` generates the
+  Docker env file with secrets from 1Password. Run after any key rotation.
+- **Staging `.env` injection:** `start.sh` runs `op inject` from `.env.staging.tpl`.
+- **Brave Search API token** is INVALID (SUBSCRIPTION_TOKEN_INVALID as of 2026-02-27).
+
+### Adding a new provider key
+
+1. Add the key to 1Password vault "OpenClaw" (as API_CREDENTIAL type, `credential` field)
+2. Add the `op://` template reference in `mhive-ops/.env.vps.tpl` and `.env.staging.tpl`
+3. Add the env var to `docker-compose.override.yml` (VPS) and `docker-compose.staging.yml`
+4. Re-run `op inject` and restart Docker
+
+### TODO
+
+1. Add **Anthropic API Key** to 1Password vault "OpenClaw" and enable in templates
+2. Fix or replace **Brave Search** API token
 
 ---
 
