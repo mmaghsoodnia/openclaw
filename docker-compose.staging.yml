@@ -20,7 +20,8 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       XAI_API_KEY: ${XAI_API_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
-      # ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      BRAVE_API_KEY: ${BRAVE_API_KEY}
     volumes:
       # gog CLI (copied to staging dir — Docker Desktop can't mount /opt/homebrew)
       - ${HOME}/.openclaw-staging/bin/gog:/usr/local/bin/gog:ro

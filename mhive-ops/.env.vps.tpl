@@ -17,8 +17,10 @@ OPENCLAW_IMAGE=openclaw:local
 OPENAI_API_KEY={{ op://OpenClaw/OpenAI API Key/credential }}
 XAI_API_KEY={{ op://OpenClaw/XAI API key/credential }}
 GEMINI_API_KEY={{ op://OpenClaw/Google Gemini API Key/credential }}
-# ANTHROPIC_API_KEY — add "Anthropic API Key" to 1Password vault "OpenClaw",
-# then add a template line here like the ones above
+ANTHROPIC_API_KEY={{ op://OpenClaw/Anthropic API Key/credential }}
+
+# --- Tools ---
+BRAVE_API_KEY={{ op://OpenClaw/Brave API Key/credential }}
 
 # --- Google Workspace (gog) ---
 GOG_KEYRING_PASSWORD={{ op://OpenClaw/GOG Keyring Password/password }}

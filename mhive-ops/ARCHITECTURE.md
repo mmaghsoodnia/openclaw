@@ -227,31 +227,24 @@ needing per-agent auth-profiles.json entries.
 ### Current state (as of 2026-02-27)
 
 - **Docker env vars** (injected from 1Password via `mhive-ops/.env.vps.tpl`):
-  `OPENAI_API_KEY`, `XAI_API_KEY`, `GEMINI_API_KEY` — available to all agents as fallback.
+  `OPENAI_API_KEY`, `XAI_API_KEY`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `BRAVE_API_KEY`
+  — available to all agents as fallback.
 - **Per-agent auth-profiles.json** still exist with keys for: google, maple, openai, xai
   (entered via `openclaw agents add`). These take priority over env vars.
-- **No Anthropic key** exists anywhere. If an agent/LLM switches to an Anthropic model,
-  it will crash with FailoverError.
-- **1Password vault "OpenClaw"** stores: Google Gemini API Key, Maple API Key, OpenAI API
-  Key, XAI API key. Does NOT have: Anthropic API Key, Brave Search key.
+- **1Password vault "OpenClaw"** stores all provider keys: Google Gemini, Maple, OpenAI,
+  XAI, Anthropic, and Brave Search.
 - **VPS 1Password access:** service account token at `/root/.op-service-account-token`,
   `OP_SERVICE_ACCOUNT_TOKEN` exported in `.bashrc`/`.profile`.
-- **VPS `.env` injection:** `op inject -i mhive-ops/.env.vps.tpl -o .env` generates the
+- **VPS `.env` injection:** `op inject -f -i mhive-ops/.env.vps.tpl -o .env` generates the
   Docker env file with secrets from 1Password. Run after any key rotation.
 - **Staging `.env` injection:** `start.sh` runs `op inject` from `.env.staging.tpl`.
-- **Brave Search API token** is INVALID (SUBSCRIPTION_TOKEN_INVALID as of 2026-02-27).
 
 ### Adding a new provider key
 
 1. Add the key to 1Password vault "OpenClaw" (as API_CREDENTIAL type, `credential` field)
 2. Add the `op://` template reference in `mhive-ops/.env.vps.tpl` and `.env.staging.tpl`
 3. Add the env var to `docker-compose.override.yml` (VPS) and `docker-compose.staging.yml`
-4. Re-run `op inject` and restart Docker
-
-### TODO
-
-1. Add **Anthropic API Key** to 1Password vault "OpenClaw" and enable in templates
-2. Fix or replace **Brave Search** API token
+4. Re-run `op inject -f` and restart Docker (`docker compose up -d`)
 
 ---
 
