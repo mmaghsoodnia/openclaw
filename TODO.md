@@ -71,6 +71,12 @@
 - [x] **Set up local staging environment** — Full Docker staging on Mac mirroring VPS. Scripts in `mhive-ops/staging/` (start/stop/rebuild/sync). Staging Telegram bot `@mhive_stage_bot` verified working end-to-end. _(2026-02-25)_
 - [x] **Merge upstream/main into fork** — Updated fork from v2026.2.18 to latest upstream (2286 commits). Resolved Dockerfile conflict (kept python3-pip + upstream --chown). _(2026-02-25)_
 - [x] **Zero hardcoded secrets** — All API keys now injected from 1Password via Docker env vars. Cleared all 14 agents' auth-profiles.json. Replaced hardcoded maple/elevenlabs keys in openclaw.json with `${VAR}` refs. Templates: `mhive-ops/.env.vps.tpl` + `.env.staging.tpl`. _(2026-02-27)_
+- [x] **Set up desktop gog MCP service** — Created MCP server at `~/.local/share/gog-mcp/` (25 tools wrapping gog CLI). Registered in Claude Code and Claude Desktop. Uses macOS Keychain auth. Desktop-only — does not affect openclaw's Docker-based gog setup. _(2026-03-03)_
+- [x] **Fix staging gog binary architecture** — `~/.openclaw-staging/bin/gog` was a macOS Mach-O binary that couldn't run in Docker Desktop's Linux containers. Built linux/arm64 binary from source (`steipete/gogcli`, v0.12.0-dev). _(2026-03-03)_
+- [x] **Fix staging gog credentials from 1Password** — Created `mhive-ops/staging/setup-gog.sh` that reconstructs gogcli directory from 1Password (credentials.json via `op inject`, keyring tokens via `op read`). Updated `docker-compose.staging.yml` to mount from `~/.openclaw-staging/gogcli/` instead of `~/.config/gogcli/`. Integrated into `start.sh` and `rebuild.sh`. _(2026-03-03)_
+- [x] **Fix Telegram bots not responding** — mhive had disabled both `channels.telegram.enabled` and `plugins.entries.telegram.enabled` when asked to "turn everything off." Re-enabled both, ran `doctor --fix` to apply config migration, confirmed all 3 bots started. _(2026-03-04)_
+- [x] **Add emergency cost kill switch** — Documented correct 2-lever kill switch in all 14 agent TOOLS.md files on VPS (synced to staging), `mhive-ops/ARCHITECTURE.md`, and `MEMORY.md`. Kill: `cron.enabled=false` + `agents.defaults.heartbeat.every=""`. Channels/Telegram stay ON throughout. Trigger phrase to mhive: "Emergency stop — kill the spending". _(2026-03-04)_
+- [x] **Merge upstream v2026.3.2 + deploy** — Merged 1600 upstream commits (v2026.3.1 and v2026.3.2) into fork. Merge was clean — no conflicts. Dockerfile preserved our Python layer (`python3-pip python3-venv` for PolyHive) plus gained upstream HEALTHCHECK, OCI labels, and Docker CLI sandbox support. Pushed to fork, deployed to VPS (`docker compose up -d`), rebuilt staging. All 4 bots verified running (mhive, percy, bookworm, staging). _(2026-03-06)_
 
 ---
 
@@ -85,11 +91,21 @@
 - [x] **Update VPS to latest fork** — `[Layer 1 — Operator]` _(2026-02-25)_
   - Pulled merged code on VPS, rebuilt Docker image, restarted gateway. All 3 Telegram bots verified running.
 
+- [x] **Back up VPS gog keyring tokens to 1Password** — `[Layer 1 — Operator]` _(2026-03-03)_
+  - Stored base64-encoded OAuth refresh tokens in 1Password item "GOG OAuth Tokens" (fields: `default_token`, `account_token`).
+  - Verified `setup-gog.sh` can reconstruct the full gogcli directory from 1Password.
+  - Staging gog tested end-to-end: Gmail, Calendar, Drive all working from inside Docker container.
+
 - [ ] **Re-enable WhatsApp channel (currently disabled)** — `[Layer 1 — Operator]`
   - **Disabled 2026-02-25** due to security issues: default `dmPolicy: "pairing"` caused bot to auto-reply pairing codes to random contacts ([Issue #834](https://github.com/openclaw/openclaw/issues/834)), and allowlist bypass via persisted pairings ([Issue #22599](https://github.com/openclaw/openclaw/issues/22599)).
   - Baileys session still exists at `/root/.openclaw/credentials/whatsapp/default/`. Plugin disabled in `plugins.entries.whatsapp.enabled = false`, channel set to `dmPolicy: "disabled"`.
   - **Before re-enabling:** verify Issues #22599 and #25975 are fixed upstream, merge fixes into fork, use a dedicated number (not personal), and set `dmPolicy: "allowlist"`.
   - 1Password item "OpenClaw WhatsApp" (credential field) stores the allowFrom number for when this is re-enabled.
+
+- [ ] **Set up staging on Mac Studio** — `[Layer 1 — Operator]`
+  - Mac Studio does not have a local staging environment yet. Only the Mac (current dev machine) has one.
+  - Replicate the setup from `mhive-ops/staging/` scripts. Needs Docker Desktop, 1Password service account token at `~/.op-service-account-token`, and a linux/arm64 gog binary at `~/.openclaw-staging/bin/gog`.
+  - See `mhive-ops/sessions/2026-02-25.md` (staging setup) and `2026-03-03.md` (gog binary fix) for reference.
 
 - [ ] **Enable voice for agents** — `[Layer 1 — Operator]`
   - ElevenLabs TTS is fully implemented in gateway (`src/tts/`). `talk.apiKey` wired in `openclaw.json`.
@@ -101,6 +117,8 @@
 
 ## Notes
 
+- **Multi-machine setup:** This project is developed across Mac Studio (original build machine), Mac (second dev machine with staging), and VPS (production). Multiple Claude Code instances coordinate via this `TODO.md`, `mhive-ops/ARCHITECTURE.md`, and session logs in `mhive-ops/sessions/`. Each machine's Claude Code also has its own auto-memory (`MEMORY.md`) for machine-specific knowledge.
+- **Pre-task workspace sync (MANDATORY):** Before starting any task involving staging, sync the agent workspace from VPS: `bash mhive-ops/staging/sync-workspace.sh`. This pulls the latest agent memory, soul, and session data so staging tests run against current agent state. Done automatically by `start.sh` and `rebuild.sh`. Falls back to existing files if VPS is unreachable.
 - **Architecture reference:** Full system architecture (two-layer model, context window construction, change ownership table) documented in `mhive-ops/ARCHITECTURE.md`. Read before making changes.
 - **Deployment flow:** Mac/Studio → push to `mmaghsoodnia/openclaw` on GitHub → VPS pulls from `origin` (our fork) → rebuild Docker → restart gateway. Never pull upstream directly on VPS.
 - **Agent system (The Hive):** 14 agents configured — main + 8 PolyHive agents + 5 BookHive agents. Primary model: `xai/grok-4-1-fast`.
@@ -112,3 +130,5 @@
 - **Polymarket 1Password items (2026-02-23):** "Polymarket Wallet" (private_key, funder_address, chain_id, signature_type) and "Polymarket API" (host, gamma_api_base_url). `.env.tpl` on VPS at `/root/.openclaw/workspace/the-hive/.env.tpl` — regenerate `.env` via `op inject --account my.1password.com -i .env.tpl -o .env`.
 - **Python venv persistent (2026-02-24):** The venv at `/root/.openclaw/workspace/the-hive/venv/` is on a Docker volume mount and auto-bootstrapped at container start via `docker-compose.override.yml`. `python3-pip` and `python3-venv` are in the Dockerfile.
 - **Pre-existing Polymarket notes (2026-02-23):** Wallet address and funder address don't match (may indicate proxy/safe setup). Wallet has ~$200 USDC balance. The address mismatch was not caused by the VPS migration.
+- **Emergency kill switch (2026-03-04):** Two-lever kill: `cron.enabled=false` + `agents.defaults.heartbeat.every=""`. Channels/Telegram stay ON. Documented in all 14 TOOLS.md on VPS + ARCHITECTURE.md. Trigger to mhive: "Emergency stop — kill the spending". Resume: "Resume normal operations". Never disable channels — that cuts communication.
+- **Telegram plugin vs channel (2026-03-04):** The Telegram channel has TWO independent on/off switches: `channels.telegram.enabled` (channel config) AND `plugins.entries.telegram.enabled` (plugin registry). Both must be true for bots to start. The plugin being disabled (`false`) silently prevents all bots from connecting with no error logs.
