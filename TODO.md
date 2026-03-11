@@ -77,6 +77,8 @@
 - [x] **Fix Telegram bots not responding** — mhive had disabled both `channels.telegram.enabled` and `plugins.entries.telegram.enabled` when asked to "turn everything off." Re-enabled both, ran `doctor --fix` to apply config migration, confirmed all 3 bots started. _(2026-03-04)_
 - [x] **Add emergency cost kill switch** — Documented correct 2-lever kill switch in all 14 agent TOOLS.md files on VPS (synced to staging), `mhive-ops/ARCHITECTURE.md`, and `MEMORY.md`. Kill: `cron.enabled=false` + `agents.defaults.heartbeat.every=""`. Channels/Telegram stay ON throughout. Trigger phrase to mhive: "Emergency stop — kill the spending". _(2026-03-04)_
 - [x] **Merge upstream v2026.3.2 + deploy** — Merged 1600 upstream commits (v2026.3.1 and v2026.3.2) into fork. Merge was clean — no conflicts. Dockerfile preserved our Python layer (`python3-pip python3-venv` for PolyHive) plus gained upstream HEALTHCHECK, OCI labels, and Docker CLI sandbox support. Pushed to fork, deployed to VPS (`docker compose up -d`), rebuilt staging. All 4 bots verified running (mhive, percy, bookworm, staging). _(2026-03-06)_
+- [x] **Fix PolyHive agent pipeline (Phase 1 recovery)** — Diagnosed 6 root causes of SCORECARD Phase 1 FAILED (0/8 agents tool-validated). Fixed: (1) Model assignments — Scout→gemini-2.0-flash, Trader→claude-sonnet-4-5 (correct entries in `agents.list`, not invalid nested dict). (2) Wrote 7 RUNBOOKs: Scout (no-hallucination rule + script path), Trader (fixed broken `source activate` → full python path, fixed data path to `the-hive/data/`), PM (replaced FiatKillerHive crypto content with PolyHive procedures), Analyst/Contrarian/Quant/Risk (written from scratch with templates). (3) Updated all 8 TOOLS.md files: prepended RUNBOOK pointer + critical inline rules; fixed `source venv/bin/activate` → full python path; fixed `hive-trader/data/` → `the-hive/data/` in Analyst/Contrarian/Quant/Risk. (4) AGENTS.md Every Session step 5 added: read RUNBOOK.md. Operator notification sent via mhive. Cron remains off pending pipeline verification. _(2026-03-07)_
+- [x] **Implement PolyHive health monitoring system** — Layered audit design: (1) `hive-auditor/RUNBOOK.md` rewritten with PART A (pipeline KPI audit: session counts, cron run log analysis, 5 KPIs computed, AUDIT.md written) + PART B (existing financial reconciliation). (2) `hive-auditor/TOOLS.md` extended with session JSONL paths, cron run log format, Python snippet for last-24h filtering. (3) `auditor-daily-audit` cron job message updated to run full pipeline KPI audit first, then financial reconciliation. (4) `hive-pm/RUNBOOK.md` morning protocol extended with step 0: read AUDIT.md, gate on RED status. Model already set to gemini-2.0-flash. Cron still globally disabled — auditor will produce first AUDIT.md once cron is re-enabled. _(2026-03-10)_
 
 ---
 
@@ -95,12 +97,6 @@
   - Stored base64-encoded OAuth refresh tokens in 1Password item "GOG OAuth Tokens" (fields: `default_token`, `account_token`).
   - Verified `setup-gog.sh` can reconstruct the full gogcli directory from 1Password.
   - Staging gog tested end-to-end: Gmail, Calendar, Drive all working from inside Docker container.
-
-- [ ] **Re-enable WhatsApp channel (currently disabled)** — `[Layer 1 — Operator]`
-  - **Disabled 2026-02-25** due to security issues: default `dmPolicy: "pairing"` caused bot to auto-reply pairing codes to random contacts ([Issue #834](https://github.com/openclaw/openclaw/issues/834)), and allowlist bypass via persisted pairings ([Issue #22599](https://github.com/openclaw/openclaw/issues/22599)).
-  - Baileys session still exists at `/root/.openclaw/credentials/whatsapp/default/`. Plugin disabled in `plugins.entries.whatsapp.enabled = false`, channel set to `dmPolicy: "disabled"`.
-  - **Before re-enabling:** verify Issues #22599 and #25975 are fixed upstream, merge fixes into fork, use a dedicated number (not personal), and set `dmPolicy: "allowlist"`.
-  - 1Password item "OpenClaw WhatsApp" (credential field) stores the allowFrom number for when this is re-enabled.
 
 - [ ] **Set up staging on Mac Studio** — `[Layer 1 — Operator]`
   - Mac Studio does not have a local staging environment yet. Only the Mac (current dev machine) has one.

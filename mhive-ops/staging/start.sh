@@ -12,16 +12,20 @@ cd "$PROJECT_ROOT"
 echo "=== OpenClaw Staging Environment ==="
 echo ""
 
-# 1. Ensure staging dir exists
-if [ ! -d "$STAGING_DIR/workspace" ]; then
-  echo "[1/6] Staging dir missing — syncing from VPS..."
-  bash "$SCRIPT_DIR/sync-from-vps.sh"
+# 1. Sync agent workspace from VPS (latest memory, soul, sessions)
+echo "[1/8] Syncing agent workspace from VPS..."
+if bash "$SCRIPT_DIR/sync-workspace.sh"; then
+  echo "  Workspace synced."
 else
-  echo "[1/6] Staging directory exists"
+  echo "  WARNING: VPS unreachable — using existing workspace files."
+  if [ ! -d "$STAGING_DIR/workspace" ]; then
+    echo "  ERROR: No staging workspace exists. Run sync-from-vps.sh first."
+    exit 1
+  fi
 fi
 
 # 2. Generate .env.staging (secrets from 1Password + paths from shell)
-echo "[2/6] Generating .env.staging..."
+echo "[2/8] Generating .env.staging..."
 OP_SERVICE_ACCOUNT_TOKEN=$(<~/.op-service-account-token) \
   op inject -f --account my.1password.com \
   -i "$SCRIPT_DIR/.env.staging.tpl" \
@@ -37,24 +41,28 @@ GOG_ACCOUNT=mhive@bigbraincap.com
 EOF
 chmod 600 "$PROJECT_ROOT/.env.staging"
 
-# 3. Apply staging config patches
-echo "[3/6] Patching openclaw.json for staging..."
+# 3. Reconstruct gog credentials from 1Password
+echo "[3/8] Setting up gog credentials..."
+bash "$SCRIPT_DIR/setup-gog.sh"
+
+# 4. Apply staging config patches
+echo "[4/8] Patching openclaw.json for staging..."
 bash "$SCRIPT_DIR/apply-config.sh"
 
-# 4. Build Docker image from local source
-echo "[4/6] Building Docker image..."
+# 5. Build Docker image from local source
+echo "[5/8] Building Docker image..."
 "$DOCKER" build -t openclaw:local "$PROJECT_ROOT"
 
-# 5. Start services
-echo "[5/6] Starting containers..."
+# 6. Start services
+echo "[6/8] Starting containers..."
 "$DOCKER" compose \
   --env-file "$PROJECT_ROOT/.env.staging" \
   -f "$PROJECT_ROOT/docker-compose.yml" \
   -f "$PROJECT_ROOT/docker-compose.staging.yml" \
   up -d
 
-# 6. Health check
-echo "[6/6] Waiting for gateway..."
+# 7. Health check
+echo "[7/8] Checking gateway health..."
 sleep 5
 if curl -sf http://localhost:18789/health > /dev/null 2>&1; then
   echo "Gateway healthy!"

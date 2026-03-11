@@ -27,7 +27,7 @@ services:
     volumes:
       # gog CLI (copied to staging dir — Docker Desktop can't mount /opt/homebrew)
       - ${HOME}/.openclaw-staging/bin/gog:/usr/local/bin/gog:ro
-      - ${HOME}/.config/gogcli:/home/node/.config/gogcli:ro
+      - ${HOME}/.openclaw-staging/gogcli:/home/node/.config/gogcli:ro
     depends_on:
       maple-proxy:
         condition: service_started

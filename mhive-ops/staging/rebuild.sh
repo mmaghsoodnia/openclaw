@@ -11,6 +11,10 @@ DOCKER="${DOCKER:-/usr/local/bin/docker}"
 
 cd "$PROJECT_ROOT"
 
+# Sync agent workspace from VPS (latest memory, soul, sessions)
+echo "Syncing agent workspace from VPS..."
+bash "$SCRIPT_DIR/sync-workspace.sh" || echo "  WARNING: VPS unreachable — using existing workspace files."
+
 # Re-inject .env.staging so keys are always fresh
 echo "Regenerating .env.staging..."
 OP_SERVICE_ACCOUNT_TOKEN=$(<~/.op-service-account-token) \
@@ -26,6 +30,9 @@ OPENCLAW_BRIDGE_PORT=18790
 GOG_ACCOUNT=mhive@bigbraincap.com
 EOF
 chmod 600 "$PROJECT_ROOT/.env.staging"
+
+echo "Refreshing gog credentials from 1Password..."
+bash "$SCRIPT_DIR/setup-gog.sh"
 
 echo "Rebuilding Docker image from local source..."
 "$DOCKER" build -t openclaw:local "$PROJECT_ROOT"

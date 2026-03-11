@@ -1,4 +1,5 @@
 # OpenClaw System Architecture
+
 ## Operator's Mental Model for Safe, Coherent Project Management
 
 > **Read this before touching anything.** This document captures how the gateway, agents,
@@ -122,19 +123,19 @@ TOOLS BLOCK (structured JSON schema, not plain text)
 
 ## The Rule: Which Layer Determines How We Change Things
 
-| What you want to change | Layer | Correct approach |
-|---|---|---|
-| ElevenLabs API key | 1 — `openclaw.json` `talk.apiKey` | Edit directly via `op inject` or template |
-| Google OAuth secret | 1 — `gog` config + 1Password | Rotate in Google Cloud, update 1Password, re-auth gog |
-| Python packages in container | 1 — Dockerfile or startup script | Add to Dockerfile; send mhive notification about new venv path |
-| Add WhatsApp channel | 1 — `openclaw.json` channels + auth | Trigger `whatsapp_login` agent tool via mhive Telegram message |
-| Enable voice for an agent | 1 — `openclaw.json` `talk` config | Edit directly |
-| New agent system prompt rules | 1 — gateway source (`system-prompt.ts`) | Code change → build → deploy |
-| Agent's personality or mission | 2 — `SOUL.md` | Send mhive a message explaining the change; let the agent update its own SOUL.md |
-| Agent's long-term memory | 2 — `MEMORY.md` | Message the agent; let it write its own memory |
-| Agent's daily task reminders | 2 — `HEARTBEAT.md` | Message the agent |
-| Agent's tool documentation | 2 — `TOOLS.md` | Prefer messaging; direct edit OK if agent is non-responsive |
-| Agent RUNBOOK (scripts, paths) | 2 — `workspace/{agent}/RUNBOOK.md` | Message agent first; direct edit if broken/offline |
+| What you want to change        | Layer                                   | Correct approach                                                                 |
+| ------------------------------ | --------------------------------------- | -------------------------------------------------------------------------------- |
+| ElevenLabs API key             | 1 — `openclaw.json` `talk.apiKey`       | Edit directly via `op inject` or template                                        |
+| Google OAuth secret            | 1 — `gog` config + 1Password            | Rotate in Google Cloud, update 1Password, re-auth gog                            |
+| Python packages in container   | 1 — Dockerfile or startup script        | Add to Dockerfile; send mhive notification about new venv path                   |
+| Add WhatsApp channel           | 1 — `openclaw.json` channels + auth     | Trigger `whatsapp_login` agent tool via mhive Telegram message                   |
+| Enable voice for an agent      | 1 — `openclaw.json` `talk` config       | Edit directly                                                                    |
+| New agent system prompt rules  | 1 — gateway source (`system-prompt.ts`) | Code change → build → deploy                                                     |
+| Agent's personality or mission | 2 — `SOUL.md`                           | Send mhive a message explaining the change; let the agent update its own SOUL.md |
+| Agent's long-term memory       | 2 — `MEMORY.md`                         | Message the agent; let it write its own memory                                   |
+| Agent's daily task reminders   | 2 — `HEARTBEAT.md`                      | Message the agent                                                                |
+| Agent's tool documentation     | 2 — `TOOLS.md`                          | Prefer messaging; direct edit OK if agent is non-responsive                      |
+| Agent RUNBOOK (scripts, paths) | 2 — `workspace/{agent}/RUNBOOK.md`      | Message agent first; direct edit if broken/offline                               |
 
 ### The notification rule in practice
 
@@ -232,12 +233,37 @@ resolves the API key in this order:
 3. Add env var to `docker-compose.override.yml` (VPS) and `docker-compose.staging.yml`
 4. Re-run `op inject -f` and `docker compose up -d`
 
+### Google Workspace (gog) credentials
+
+gog requires three credential files inside the Docker container at `/home/node/.config/gogcli/`:
+
+| File                           | Source                                 | 1Password item                                                                 |
+| ------------------------------ | -------------------------------------- | ------------------------------------------------------------------------------ |
+| `config.json`                  | Static (`{"keyring_backend": "file"}`) | N/A                                                                            |
+| `credentials.json`             | OAuth client_id + client_secret        | "Google Workspace OAuth" (fields: `client_id`, `client_secret`)                |
+| `keyring/token:*`              | Encrypted OAuth refresh tokens         | "GOG OAuth Tokens" (fields: `default_token`, `account_token` — base64-encoded) |
+| `GOG_KEYRING_PASSWORD` env var | Decrypts the keyring                   | "GOG Keyring Password" (field: `password`)                                     |
+
+**VPS:** Files live on disk at `/root/.config/gogcli/`, mounted via `docker-compose.override.yml`.
+The keyring password is injected as an env var from `.env.vps.tpl`.
+
+**Staging:** Files are reconstructed from 1Password by `mhive-ops/staging/setup-gog.sh` into
+`~/.openclaw-staging/gogcli/`, mounted via `docker-compose.staging.yml`. The script:
+
+1. Writes static `config.json`
+2. Uses `op inject` with `.gogcli-credentials.tpl` for `credentials.json`
+3. Uses `op read` + base64 decode for keyring token files
+4. The keyring password comes via `.env.staging` (same as other env vars)
+
+Both `start.sh` and `rebuild.sh` call `setup-gog.sh` automatically.
+
 ### Deploying to a new environment
 
 1. Set up 1Password service account with access to vault "OpenClaw"
 2. Store token at `~/.op-service-account-token`
 3. Copy `mhive-ops/.env.vps.tpl` and run `op inject`
-4. `docker compose up -d` — all secrets resolve from env vars
+4. Run `mhive-ops/staging/setup-gog.sh` to reconstruct gog credentials
+5. `docker compose up -d` — all secrets resolve from env vars
 
 ---
 
@@ -246,7 +272,7 @@ resolves the API key in this order:
 The WhatsApp channel is **fully implemented** in the gateway source
 (`src/channels/plugins/agent-tools/whatsapp-login.ts`). The intended flow is:
 
-1. Message mhive via Telegram: *"Connect WhatsApp for yourself"*
+1. Message mhive via Telegram: _"Connect WhatsApp for yourself"_
 2. mhive calls the `whatsapp_login` agent tool
 3. The tool generates a QR code and sends it back as an image
 4. You scan it on your phone
@@ -282,6 +308,7 @@ workspace/
 ```
 
 Telegram bindings (from `openclaw.json`):
+
 - `@mhive bot` → `agentId: main` (mhive, chief of staff)
 - `@percy bot` → `agentId: hive-pm` (PolyHive PM)
 - `@bookworm bot` → `agentId: book-pm` (BookHive PM)
@@ -307,11 +334,91 @@ changes must be deliberately merged into our fork first and reviewed.
 
 ---
 
+## VPS Security Hardening (2026-03-10)
+
+Four layers of inbound protection, all active:
+
+| Layer                        | What                                                                | Config location                                     |
+| ---------------------------- | ------------------------------------------------------------------- | --------------------------------------------------- |
+| **Hostinger cloud firewall** | Allow TCP 22 (SSH) + UDP 41641 (Tailscale WireGuard), drop all else | Hostinger API — firewall group `mhive` (ID 234443)  |
+| **DOCKER-USER iptables**     | Ports 18789-18790 locked to Tailscale interface only                | VPS `/etc/network/if-pre-up.d/docker-user-firewall` |
+| **SSH hardening**            | Key-only auth, no passwords, max 3 attempts, no root password login | VPS `/etc/ssh/sshd_config.d/01-hardening.conf`      |
+| **fail2ban**                 | 3 SSH failures → 24h ban, Tailscale IPs whitelisted                 | VPS `/etc/fail2ban/jail.local`                      |
+
+**Key details:**
+
+- All management access goes through **Tailscale** (IP `100.71.224.113`). Public IP `76.13.79.239` is firewalled.
+- Docker bypasses UFW — the `DOCKER-USER` chain is the only way to restrict Docker-published ports.
+- `01-hardening.conf` must sort before `50-cloud-init.conf` (OpenSSH first-match-wins).
+- Hostinger firewall is inbound-only — all outbound connections (Google APIs, Telegram, 1Password, Polymarket) are unaffected.
+- UDP 41641 (Tailscale/WireGuard) silently drops unauthenticated packets — not an attack vector.
+- Hostinger MCP server available for managing cloud firewall: `mhive-ops/hostinger-mcp-run.sh` (registered in `~/.claude.json`).
+
+---
+
+## Agent Workspace Sync
+
+Before testing anything on staging, **always sync the agent workspace from VPS**:
+
+```
+bash mhive-ops/staging/sync-workspace.sh
+```
+
+This SSHs to the VPS, creates a tar backup of the workspace (excluding venvs and
+node_modules), downloads it, and extracts to `~/.openclaw-staging/workspace/`.
+
+**Why:** Agent workspace files (SOUL.md, MEMORY.md, sessions, RUNBOOK.md, etc.) are
+the agents' minds. Testing against stale workspace data means testing against agents
+that don't know what they know in production — leading to false confidence in staging.
+
+The sync is built into `start.sh` (step 1) and `rebuild.sh` (first step). If the VPS
+is unreachable, the scripts fall back to existing workspace files but warn you.
+
+The VPS-side backup script is at `/root/openclaw/mhive-ops/backup-workspace.sh`.
+
+---
+
+## Emergency Procedures
+
+### Cost Kill Switch — Stop Runaway Agent Spending
+
+When agents are generating too much API spend, use this two-lever kill switch via the
+gateway config. **Do NOT disable channels or Telegram** — that severs communication and
+requires SSH to restore.
+
+**Kill switch** (patch via `gateway` tool `config.patch`, or edit `openclaw.json` on VPS):
+
+```json
+{
+  "cron": { "enabled": false },
+  "agents": { "defaults": { "heartbeat": { "every": "" } } }
+}
+```
+
+**Resume** (reverse both settings):
+
+```json
+{
+  "cron": { "enabled": true },
+  "agents": { "defaults": { "heartbeat": { "every": "30m" } } }
+}
+```
+
+**Effect:** Stops all scheduled cron jobs and heartbeat polling. Telegram stays live so
+you can tell mhive to activate/deactivate via a message. Gateway restarts automatically
+after config patch (~5s). Inbound messages still work during the kill switch.
+
+**To trigger via mhive:** Say _"Emergency stop — kill the spending"_. mhive will apply
+the patch and confirm back via Telegram. To resume: _"Resume normal operations"_.
+
+---
+
 ## Session Start Checklist (for any future Claude/operator session)
 
 1. Read `TODO.md` at project root
 2. Read latest session log in `mhive-ops/sessions/`
 3. Read this file (`mhive-ops/ARCHITECTURE.md`)
-4. Before any change: ask "Is this Layer 1 or Layer 2?"
-5. If Layer 2: notify the agent first via mhive Telegram
-6. At session end: write `mhive-ops/sessions/YYYY-MM-DD.md`
+4. **Sync agent workspace from VPS** — `bash mhive-ops/staging/sync-workspace.sh`
+5. Before any change: ask "Is this Layer 1 or Layer 2?"
+6. If Layer 2: notify the agent first via mhive Telegram
+7. At session end: write `mhive-ops/sessions/YYYY-MM-DD.md`
