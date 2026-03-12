@@ -52,6 +52,8 @@ export type MattermostAccountConfig = {
   blockStreaming?: boolean;
   /** Merge streamed block replies before sending. */
   blockStreamingCoalesce?: BlockStreamingCoalesceConfig;
+  /** Control reply threading (off|first|all). Default: "all". */
+  replyToMode?: "off" | "first" | "all";
   /** Outbound response prefix override for this channel/account. */
   responsePrefix?: string;
   /** Action toggles for this account. */
@@ -69,6 +71,15 @@ export type MattermostAccountConfig = {
     callbackPath?: string;
     /** Explicit callback URL (e.g. behind reverse proxy). */
     callbackUrl?: string;
+  };
+  interactions?: {
+    /** External base URL used for Mattermost interaction callbacks. */
+    callbackBaseUrl?: string;
+    /**
+     * IP/CIDR allowlist for callback request sources when Mattermost reaches the gateway
+     * over a non-loopback path. Keep this narrow to the Mattermost server or trusted ingress.
+     */
+    allowedSourceIps?: string[];
   };
 };
 
