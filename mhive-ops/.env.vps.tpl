@@ -19,6 +19,7 @@ XAI_API_KEY={{ op://OpenClaw/XAI API key/credential }}
 GEMINI_API_KEY={{ op://OpenClaw/Google Gemini API Key/credential }}
 ANTHROPIC_API_KEY={{ op://OpenClaw/Anthropic API Key/credential }}
 MAPLE_API_KEY={{ op://OpenClaw/Maple API Key/credential }}
+VENICE_API_KEY={{ op://OpenClaw/Venice API Key/credential }}
 
 # --- Tools & Services ---
 BRAVE_API_KEY={{ op://OpenClaw/Brave API Key/credential }}
