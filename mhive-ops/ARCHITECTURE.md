@@ -338,17 +338,17 @@ changes must be deliberately merged into our fork first and reviewed.
 
 Four layers of inbound protection, all active:
 
-| Layer                        | What                                                                | Config location                                     |
-| ---------------------------- | ------------------------------------------------------------------- | --------------------------------------------------- |
-| **Hostinger cloud firewall** | Allow TCP 22 (SSH) + UDP 41641 (Tailscale WireGuard), drop all else | Hostinger API — firewall group `mhive` (ID 234443)  |
-| **DOCKER-USER iptables**     | Ports 18789-18790 locked to Tailscale interface only                | VPS `/etc/network/if-pre-up.d/docker-user-firewall` |
-| **SSH hardening**            | Key-only auth, no passwords, max 3 attempts, no root password login | VPS `/etc/ssh/sshd_config.d/01-hardening.conf`      |
-| **fail2ban**                 | 3 SSH failures → 24h ban, Tailscale IPs whitelisted                 | VPS `/etc/fail2ban/jail.local`                      |
+| Layer                        | What                                                                                              | Config location                                     |
+| ---------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| **Hostinger cloud firewall** | Allow TCP 22 (SSH) + UDP 41641 (Tailscale WireGuard), drop all else                               | Hostinger API — firewall group `mhive` (ID 234443)  |
+| **DOCKER-USER iptables**     | Ports 18789-18790 locked to Tailscale interface only; conntrack allows container outbound replies | VPS `/etc/network/if-pre-up.d/docker-user-firewall` |
+| **SSH hardening**            | Key-only auth, no passwords, max 3 attempts, no root password login                               | VPS `/etc/ssh/sshd_config.d/01-hardening.conf`      |
+| **fail2ban**                 | 3 SSH failures → 24h ban, Tailscale IPs whitelisted                                               | VPS `/etc/fail2ban/jail.local`                      |
 
 **Key details:**
 
 - All management access goes through **Tailscale** (IP `100.71.224.113`). Public IP `76.13.79.239` is firewalled.
-- Docker bypasses UFW — the `DOCKER-USER` chain is the only way to restrict Docker-published ports.
+- Docker bypasses UFW — the `DOCKER-USER` chain is the only way to restrict Docker-published ports. The chain must include a `conntrack --ctstate RELATED,ESTABLISHED` RETURN rule before the final DROP, otherwise container outbound connections (Telegram, Google, etc.) break because return traffic gets dropped. Fixed 2026-03-12.
 - `01-hardening.conf` must sort before `50-cloud-init.conf` (OpenSSH first-match-wins).
 - Hostinger firewall is inbound-only — all outbound connections (Google APIs, Telegram, 1Password, Polymarket) are unaffected.
 - UDP 41641 (Tailscale/WireGuard) silently drops unauthenticated packets — not an attack vector.
