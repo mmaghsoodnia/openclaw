@@ -1,0 +1,32 @@
+{
+  "benchmark_metadata": {
+    "elapsed_ms": 31425,
+    "timestamp": "2026-03-13T15:20:38Z"
+  },
+  "api_response": {
+    "model": "claude-sonnet-4-5-20250929",
+    "id": "msg_01G87Nf1EXWF3SGsE4EvD6FB",
+    "type": "message",
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "```json\n{\n  \"primary_recommendation\": {\n    \"event\": \"PSG vs Marseille (Ligue 1)\",\n    \"thesis\": \"PSG home dominance in Le Classique presents significant edge. Market at 0.65 implies 65% win probability, but PSG's home record against Marseille (80%+ last 5 years), current form (PSG 2nd, Marseille inconsistent), and historical derby dynamics support 0.78 true probability. 13pp edge is meaningful. Volume ($28.7k) and liquidity ($450k) adequate for $25 position without material slippage.\",\n    \"ev_calculation\": {\n      \"market_price\": 0.65,\n      \"true_probability\": 0.78,\n      \"edge\": \"0.78 - 0.65 = 0.13 (13pp)\",\n      \"cost_per_share\": 0.65,\n      \"payout_per_share\": 1.0,\n      \"ev_per_dollar\": \"0.78 * (1.0 - 0.65) + 0.22 * (0 - 0.65) = 0.78 * 0.35 - 0.22 * 0.65\",\n      \"ev_calculation_result\": \"0.273 - 0.143 = 0.13\",\n      \"ev_percentage\": \"+13% per dollar risked\"\n    },\n    \"kelly_fraction\": {\n      \"formula\": \"f = (bp - q) / b\",\n      \"b\": \"0.5385 (net odds: (1/0.65 - 1))\",\n      \"p\": \"0.78 (true win probability)\",\n      \"q\": \"0.22 (true loss probability)\",\n      \"calculation\": \"(0.5385 * 0.78 - 0.22) / 0.5385 = (0.42 - 0.22) / 0.5385 = 0.371\",\n      \"full_kelly\": \"37.1% of bankroll\",\n      \"quarter_kelly\": \"9.3% of bankroll ($12.56)\",\n      \"half_kelly\": \"18.6% of bankroll ($25.11)\"\n    },\n    \"recommended_size_usd\": 25,\n    \"confidence\": 8,\n    \"risk_factors\": [\n      \"Derby volatility — emotions can override form\",\n      \"Marseille capable of upsets despite inconsistency\",\n      \"Injury news not reflected in scan (requires pre-trade validation)\",\n      \"Market liquidity adequate but not deep — monitor fill price\",\n      \"Single-game variance high (not a portfolio yet)\"\n    ],\n    \"recommendation\": \"BUY\",\n    \"reasoning\": \"Highest EV (13%), Kelly supports aggressive sizing (half-Kelly = $25), strong structural edge (home PSG in derby), adequate liquidity. Risk factors present but manageable. With $135 bankroll, this is our best alpha opportunity. Execute at market price 0.65 or better.\"\n  },\n  \"secondary_assessments\": [\n    {\n      \"event\": \"Chelsea vs Burnley\",\n      \"recommendation\": \"PASS\",\n      \"reasoning\": \"Already have $20 exposure to this exact market at worse price (0.81 vs current 0.81). Edge exists (88% true vs 81% market = 7pp) but bankroll concentration risk too high — would be $45/$135 (33%) in single event. Kelly says diversify.\"\n    },\n    {\n      \"event\": \"Barcelona vs Villarreal\",\n      \"recommendation\": \"PASS\",\n      \"reasoning\": \"Negative edge. Market 72%, Scout estimate 70% — we're UNDER market probability. No thesis supports paying 72 cents for 70% outcome. This is a fade, not a buy.\"\n    },\n    {\n      \"event\": \"RCD Mallorca vs RCD Espanyol\",\n      \"recommendation\": \"PASS\",\n      \"reasoning\": \"Edge exists but tiny (45% true vs 40% market = 5pp). Low volume ($3k) signals weak conviction from broader market. Liquidity OK but mid-table matchup lacks structural alpha. Save capital for stronger setups.\"\n    }\n  ],\n  \"execution_notes\": {\n    \"order_type\": \"Limit at 0.65 or better (allow 1-2% slippage to 0.66 max)\",\n    \"pre_trade_checklist\": [\n      \"Validate no late injury news for PSG key players (Mbappe, Hakimi, Marquinhos)\",\n      \"Confirm Marseille lineup — if they rest starters, edge increases\",\n      \"Check Polymarket UI for actual liquidity depth at 0.65\",\n      \"Log trade thesis in Auditor workspace before execution\"\n    ],\n    \"post_trade\": \"Update bankroll to $110 available ($135 - $25 PSG position). No further >$20 positions until PSG settles or new capital added.\"\n  }\n}\n```\n\n**Summary for Percy (hive-pm):**\n- **Primary:** PSG/Marseille BUY $25 @ 0.65 (13% EV, half-Kelly sizing)\n- **Secondary:** All PASS (Chelsea = concentration risk, Barca = negative edge, Mallorca = weak setup)\n- **Bankroll post-trade:** $110 liquid + $25 PSG + $20 Chelsea = $135 total, $130 deployed (96%)\n- **Next:** Execute PSG, then WAIT. Bankroll nearly full. No new trades until settlement or capital injection."
+      }
+    ],
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "usage": {
+      "input_tokens": 4009,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 0
+      },
+      "output_tokens": 1343,
+      "service_tier": "standard",
+      "inference_geo": "not_available"
+    }
+  }
+}

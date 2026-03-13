@@ -1,0 +1,41 @@
+{
+  "benchmark_metadata": {
+    "elapsed_ms": 5582,
+    "timestamp": "2026-03-13T15:09:33Z"
+  },
+  "api_response": {
+    "candidates": [
+      {
+        "content": {
+          "parts": [
+            {
+              "text": "```json\n{\n  \"trades\": [\n    {\n      \"event\": \"Chelsea vs Burnley (Premier League)\",\n      \"thesis\": \"Chelsea is heavily favored at home against a struggling Burnley team. The market price of 0.81 significantly undervalues Chelsea's true probability of winning, which Scout estimates at 0.88.\",\n      \"ev_calculation\": \"EV = (Probability of Win * Payout if Win) + (Probability of Loss * Loss if Loss)\\nEV = (0.88 * (1 - 0.81)) + (0.12 * (-0.81))\\nEV = (0.88 * 0.19) + (0.12 * -0.81)\\nEV = 0.1672 - 0.0972\\nEV = 0.07\",\n      \"kelly_fraction\": \"Kelly Criterion = (Probability of Win - (1 - Probability of Win) / (Odds if Win))\\nKelly Criterion = (0.88 - (1 - 0.88) / (0.19))\\nKelly Criterion = (0.88 - (0.12 / 0.19))\\nKelly Criterion = 0.88 - 0.6316\\nKelly Criterion = 0.2484\",\n      \"recommended_size_usd\": 6.71,\n      \"confidence\": 9,\n      \"risk_factors\": [\n        \"Potential for unexpected upsets in soccer\",\n        \"Key player injuries\",\n        \"Unexpected tactical changes\"\n      ],\n      \"recommendation\": \"BUY\",\n       \"notes\": \"Kelly fraction * bankroll * risk aversion factor. Assuming 1, 0.2484*135=33.5. Limit to maxRisk $27 gives us $27. Capping to $6.71 gives us a more conservative 0.25 aversion factor.\"\n    },\n    {\n      \"event\": \"Barcelona vs Villarreal (La Liga)\",\n      \"recommendation\": \"PASS\",\n      \"reason\": \"Slightly undervalued by the market but not enough edge to justify a trade at a Kelly Criterion of ~(-0.02).\",\n\t  \"notes\": \"EV = -0.02\"\n    },\n    {\n      \"event\": \"PSG vs Marseille (Ligue 1)\",\n      \"recommendation\": \"BUY\",\n      \"reason\": \"Market is undervaluing PSG's high probability of winning at home. Kelly fraction of 0.206, conservative trade recommended.\",\n\t  \"notes\": \"EV = 0.13\"\n    },\n    {\n      \"event\": \"RCD Mallorca vs RCD Espanyol (La Liga)\",\n      \"recommendation\": \"PASS\",\n      \"reason\": \"Low confidence in the market estimate and low liquidity.\",\n\t  \"notes\": \"EV = 0.05\"\n    }\n  ]\n}\n```"
+            }
+          ],
+          "role": "model"
+        },
+        "finishReason": "STOP",
+        "avgLogprobs": -0.33710287859339916
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 3712,
+      "candidatesTokenCount": 668,
+      "totalTokenCount": 4380,
+      "promptTokensDetails": [
+        {
+          "modality": "TEXT",
+          "tokenCount": 3712
+        }
+      ],
+      "candidatesTokensDetails": [
+        {
+          "modality": "TEXT",
+          "tokenCount": 668
+        }
+      ]
+    },
+    "modelVersion": "gemini-2.0-flash",
+    "responseId": "wSq0aeCBIYnx7M8Py9vv6Ag"
+  }
+}

@@ -1,0 +1,65 @@
+[
+  {
+    "id": "deepseek-reasoner",
+    "provider": "deepseek",
+    "api_type": "openai",
+    "endpoint": "https://api.deepseek.com/chat/completions",
+    "env_key": "DEEPSEEK_API_KEY",
+    "input_cost_per_mtok": 0.55,
+    "output_cost_per_mtok": 2.19
+  },
+  {
+    "id": "deepseek-chat",
+    "provider": "deepseek",
+    "api_type": "openai",
+    "endpoint": "https://api.deepseek.com/chat/completions",
+    "env_key": "DEEPSEEK_API_KEY",
+    "input_cost_per_mtok": 0.27,
+    "output_cost_per_mtok": 1.1
+  },
+  {
+    "id": "claude-sonnet-4-6-20250514",
+    "provider": "anthropic",
+    "api_type": "anthropic",
+    "endpoint": "https://api.anthropic.com/v1/messages",
+    "env_key": "ANTHROPIC_API_KEY",
+    "input_cost_per_mtok": 3.0,
+    "output_cost_per_mtok": 15.0
+  },
+  {
+    "id": "claude-sonnet-4-5-20250514",
+    "provider": "anthropic",
+    "api_type": "anthropic",
+    "endpoint": "https://api.anthropic.com/v1/messages",
+    "env_key": "ANTHROPIC_API_KEY",
+    "input_cost_per_mtok": 3.0,
+    "output_cost_per_mtok": 15.0
+  },
+  {
+    "id": "gpt-4o",
+    "provider": "openai",
+    "api_type": "openai",
+    "endpoint": "https://api.openai.com/v1/chat/completions",
+    "env_key": "OPENAI_API_KEY",
+    "input_cost_per_mtok": 2.5,
+    "output_cost_per_mtok": 10.0
+  },
+  {
+    "id": "gemini-2.0-flash",
+    "provider": "google",
+    "api_type": "google",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+    "env_key": "GEMINI_API_KEY",
+    "input_cost_per_mtok": 0.1,
+    "output_cost_per_mtok": 0.4
+  },
+  {
+    "id": "grok-4-1-fast",
+    "provider": "xai",
+    "api_type": "openai",
+    "endpoint": "https://api.x.ai/v1/chat/completions",
+    "env_key": "XAI_API_KEY",
+    "input_cost_per_mtok": 0.2,
+    "output_cost_per_mtok": 0.5
+  }
+]

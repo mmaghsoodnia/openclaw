@@ -1,0 +1,43 @@
+{
+  "benchmark_metadata": {
+    "elapsed_ms": 19599,
+    "timestamp": "2026-03-13T15:09:33Z"
+  },
+  "api_response": {
+    "id": "8f5d1779-04de-0842-440b-b4508159a8be",
+    "object": "chat.completion",
+    "created": 1773415141,
+    "model": "grok-4-1-fast-reasoning",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "```json\n{\n  \"event\": \"PSG vs Marseille (Ligue 1)\",\n  \"thesis\": \"PSG hosts Marseille in a classic derby, but PSG's overwhelming home dominance (unbeaten in last 10+ vs Marseille at Parc des Princes) and superior squad depth make a win far more likely than the market's undervalued 65% YES price. Scout's model adjusts for form, H2H, and home bias to estimate 78% true probability, yielding the highest edge among scans.\",\n  \"ev_calculation\": \"EV per $1 invested in YES = true_prob - market_price = 0.78 - 0.65 = +0.13 (13% expected profit per dollar risked). Full position EV scales linearly.\",\n  \"kelly_fraction\": 0.37,\n  \"recommended_size_usd\": 27,\n  \"confidence\": 8,\n  \"risk_factors\": [\n    \"Derby rivalry can introduce volatility and upsets\",\n    \"Marseille's counter-attacking threat on breaks\",\n    \"Liquidity $450k adequate for $27 but monitor for slippage\"\n  ],\n  \"recommendation\": \"BUY YES - Highest EV at +13%; allocate max risk limit despite full Kelly suggesting $50 (capped at 20% bankroll for safety)\"\n}\n```\n\n**Other opportunities assessment:**\n- **Chelsea vs Burnley**: BUY - Positive EV +0.07 on heavy home favorite vs bottom-3 side; complements existing $20 position.\n- **Barcelona vs Villarreal**: PASS - Negative EV -0.02; market correctly prices Barca's vulnerabilities.\n- **RCD Mallorca vs RCD Espanyol**: PASS - Marginal EV +0.05 with very low volume ($3k); not worth allocation vs better edges.",
+          "refusal": null
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 3536,
+      "completion_tokens": 366,
+      "total_tokens": 6327,
+      "prompt_tokens_details": {
+        "text_tokens": 3536,
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "cached_tokens": 149
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 2425,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "num_sources_used": 0,
+      "cost_in_usd_ticks": 20803500
+    },
+    "system_fingerprint": "fp_24359ef476"
+  }
+}

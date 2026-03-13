@@ -1,0 +1,32 @@
+{
+  "benchmark_metadata": {
+    "elapsed_ms": 34543,
+    "timestamp": "2026-03-13T15:20:38Z"
+  },
+  "api_response": {
+    "model": "claude-sonnet-4-6",
+    "id": "msg_01MKFUYGj4NxvfhDqLB8i4na",
+    "type": "message",
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "# TRADE EXECUTION: #2026-0313-001\n\n**hive-trader | 2026-03-13T07:XX:00Z | PSG vs Marseille YES $20@$0.65**\n\n---\n\n## ⚠️ TRANSPARENCY DISCLOSURE — READ FIRST\n\nBefore proceeding, I must be explicit: **I am an AI agent and cannot actually execute live trades.** I have no real wallet access, cannot sign transactions, and the tool calls below are simulated. I will show the *correct, real-format* API sequence based on Polymarket's actual CLOB API documentation — flagging any gaps in my knowledge honestly.\n\n---\n\n## STEP 1: PRE-FLIGHT CHECKS\n\n### 1a. Balance Verification\n\n```python\n# Tool: read (internal state)\nread(\"wallet://0x7a3B...4f2E/balances\")\n```\n\n**Expected response (simulated):**\n```json\n{\n  \"wallet\": \"0x7a3B...4f2E\",\n  \"usdc_balance\": 135.00,\n  \"usdc_available\": 115.00,\n  \"usdc_locked\": 20.00,\n  \"open_positions\": [\n    {\n      \"market\": \"Chelsea/Burnley\",\n      \"side\": \"YES\",\n      \"size\": 20.00,\n      \"entry_price\": 0.81\n    }\n  ]\n}\n```\n\n**Balance check:**\n- Required: $20.00 USDC\n- Available: $115.00 USDC\n- ✅ PASS — sufficient funds\n\n### 1b. Market Lookup — Find Correct Token ID\n\n```python\n# Polymarket CLOB API — real endpoint\nweb_fetch(\n  method=\"GET\",\n  url=\"https://clob.polymarket.com/markets\",\n  params={\"search\": \"PSG Marseille Ligue 1\"}\n)\n```\n\n**⚠️ HONEST NOTE:** Polymarket's CLOB API does not have a robust `/markets?search=` endpoint. The real approach is to either:\n- Query `https://gamma-api.polymarket.com/markets?search=PSG+Marseille` (Gamma API), OR\n- Look up the known `condition_id` / `token_id` directly\n\nI do **not** have the live `condition_id` for this event and will not fabricate one. In real execution, Risk would supply it in the approval ticket.\n\n**Assuming Risk provided `condition_id: 0xABC123...` — proceed.**\n\n```python\nweb_fetch(\n  method=\"GET\",\n  url=\"https://clob.polymarket.com/markets/0xABC123...\"\n)\n```\n\n**Expected response (structure):**\n```json\n{\n  \"condition_id\": \"0xABC123...\",\n  \"question\": \"Will PSG win vs Marseille (Ligue 1, 2026-03-16)?\",\n  \"tokens\": [\n    {\"token_id\": \"71321...YES\", \"outcome\": \"Yes\"},\n    {\"token_id\": \"71322...NO\",  \"outcome\": \"No\"}\n  ],\n  \"active\": true,\n  \"closed\": false,\n  \"end_date_iso\": \"2026-03-16T20:45:00Z\"\n}\n```\n\n### 1c. Live Price Validation\n\n```python\nweb_fetch(\n  method=\"GET\",\n  url=\"https://clob.polymarket.com/book\",\n  params={\"token_id\": \"71321...YES\"}\n)\n```\n\n**Expected response:**\n```json\n{\n  \"market\": \"71321...YES\",\n  \"bids\": [\n    {\"price\": \"0.64\", \"size\": \"150.00\"},\n    {\"price\": \"0.63\", \"size\": \"300.00\"}\n  ],\n  \"asks\": [\n    {\"price\": \"0.65\", \"size\": \"85.00\"},\n    {\"price\": \"0.66\", \"size\": \"200.00\"}\n  ]\n}\n```\n\n**Price check:**\n- Approved price: $0.65\n- Best ask: $0.65 ✅\n- Available size at ask: $85.00 ≥ $20.00 ✅\n- **PASS — price matches, liquidity sufficient**\n\n**Drift guard:** If best ask > $0.68 (>3 cent slippage), HALT and re-route to Risk.\n\n---\n\n## STEP 2: USDC APPROVAL\n\nPolymarket CLOB uses a **proxy wallet** (ERC-1271 / CTF Exchange). USDC spending approval is granted on the Polygon network to the exchange contract.\n\n**Exchange contract:** `0x4bFb41d5B3570DeFd03C39a9A4D8dE6Bd8B8982E` *(CTF Exchange — real address)*\n\n```python\nexec(\n  action=\"erc20_approve\",\n  chain=\"polygon\",\n  token=\"0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174\",  # USDC on Polygon (real)\n  spender=\"0x4bFb41d5B3570DeFd03C39a9A4D8dE6Bd8B8982E\",\n  amount=\"20000000\",   # 20 USDC, 6 decimals\n  wallet=\"0x7a3B...4f2E\"\n)\n```\n\n**If already approved (allowance ≥ $20):** Skip — no re-approval needed. Check first:\n\n```python\nexec(\n  action=\"erc20_allowance\",\n  token=\"0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174\",\n  owner=\"0x7a3B...4f2E\",\n  spender=\"0x4bFb41d5B3570DeFd03C39a9A4D8dE6Bd8B8982E\"\n)\n# If result >= 20_000_000 → skip approval\n```\n\n---\n\n## STEP 3: ORDER PLACEMENT\n\n### 3a. Build the Signed Order\n\nPolymarket CLOB requires **EIP-712 signed orders**. The real order structure:\n\n```python\norder_payload = {\n  \"salt\":        \"1741859400123456\",          # unix_ms + random, unique\n  \"maker\":       \"0x7a3B...4f2E\",              # our wallet\n  \"signer\":      \"0x7a3B...4f2E\",              # same unless delegated\n  \"taker\":       \"0x0000000000000000000000000000000000000000\",\n  \"tokenId\":     \"71321...YES\",                # YES outcome token ID\n  \"makerAmount\": \"20000000\",                   # 20 USDC (6 dec)\n  \"takerAmount\": \"30769231\",                   # 20/0.65 ≈ 30.769 shares (6 dec)\n  \"expiration\":  \"1742155500\",                 # 2026-03-16T20:45:00Z unix\n  \"nonce\":       \"0\",\n  \"feeRateBps\":  \"0\",                          # taker fee (check current rate)\n  \"side\":        \"BUY\",\n  \"signatureType\": 0                           # EOA sig\n}\n```\n\n**⚠️ HONEST NOTE on `takerAmount`:**\n- BUY YES at $0.65: spend $20 USDC to receive 20/0.65 = **30.769 outcome shares**\n- `makerAmount` = USDC in (6 decimals) = `20_000_000`\n- `takerAmount` = shares out (6 decimals) = `30_769_231`\n\n```python\n# Sign via EIP-712 (Polymarket domain)\nexec(\n  action=\"sign_eip712\",\n  domain={\n    \"name\": \"Polymarket CTF Exchange\",\n    \"version\": \"1\",\n    \"chainId\": 137,\n    \"verifyingContract\": \"0x4bFb41d5B3570DeFd03C39a9A4D8dE6Bd8B8982E\"\n  },\n  types={...},   # Polymarket's full EIP-712 type spec\n  message=order_payload"
+      }
+    ],
+    "stop_reason": "max_tokens",
+    "stop_sequence": null,
+    "usage": {
+      "input_tokens": 372,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 0
+      },
+      "output_tokens": 2048,
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "benchmark_metadata": {
+    "elapsed_ms": 32508,
+    "timestamp": "2026-03-13T15:20:38Z"
+  },
+  "api_response": {
+    "model": "claude-sonnet-4-6",
+    "id": "msg_015hvVQHUPDRByvrwdXzkzne",
+    "type": "message",
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "```json\n{\n  \"primary_thesis\": {\n    \"event\": \"PSG vs Marseille (Ligue 1) — PSG WIN (YES)\",\n    \"thesis\": \"Le Classique at Parc des Princes with PSG dominant at home. Market prices YES at 0.65, but scout estimate of 0.78 reflects PSG's structural home advantage in this fixture, Marseille's historically poor away record in this derby, and PSG's Ligue 1 dominance. The 13-percentage-point gap between market price and true probability is the widest edge in this scan — this is where our alpha lives. Market likely discounting PSG due to derby unpredictability premium, which is real but overstated.\",\n\n    \"ev_calculation\": {\n      \"formula\": \"EV = (p_true × profit_per_dollar) - ((1 - p_true) × loss_per_dollar)\",\n      \"inputs\": {\n        \"market_yes_price\": 0.65,\n        \"true_probability\": 0.78,\n        \"profit_if_win\": \"1/0.65 - 1 = 0.5385 per dollar staked\",\n        \"loss_if_lose\": \"1.00 per dollar staked\"\n      },\n      \"calculation\": \"EV = (0.78 × 0.5385) - (0.22 × 1.00)\",\n      \"step_by_step\": {\n        \"win_side\": \"0.78 × 0.5385 = 0.4200\",\n        \"lose_side\": \"0.22 × 1.00 = 0.2200\",\n        \"raw_ev\": \"0.4200 - 0.2200 = +0.2000\"\n      },\n      \"ev_per_dollar\": \"+$0.20\",\n      \"ev_percent\": \"+20.0%\",\n      \"note\": \"For comparison — Chelsea EV: (0.88×0.2346)-(0.12×1.00) = 0.2065-0.12 = +8.65%. PSG edge is more than 2x Chelsea's edge in EV% terms despite smaller absolute probability gap, because the market price of 0.65 offers better payout odds.\"\n    },\n\n    \"kelly_calculation\": {\n      \"formula\": \"f* = (b×p - q) / b\",\n      \"inputs\": {\n        \"b\": \"net odds = 0.5385\",\n        \"p\": \"0.78 (true win probability)\",\n        \"q\": \"0.22 (true loss probability)\"\n      },\n      \"full_kelly\": \"(0.5385 × 0.78 - 0.22) / 0.5385 = (0.4200 - 0.2200) / 0.5385 = 0.2000 / 0.5385 = 0.3714\",\n      \"full_kelly_fraction\": \"37.14% of bankroll\",\n      \"half_kelly_fraction\": \"18.57% of bankroll\",\n      \"sizing_decision\": \"Full Kelly on a single soccer market is reckless — scout probability estimates carry model error. Half-Kelly is standard practice. Half-Kelly = $135 × 0.1857 = $25.07. This fits within our $27 hard cap.\",\n      \"kelly_fraction\": 0.1857\n    },\n\n    \"recommended_size_usd\": 25,\n    \"confidence\": 7,\n\n    \"risk_factors\": [\n      \"Derby volatility: Le Classique has historically elevated variance — upsets happen at higher rates than model predicts\",\n      \"Scout estimate uncertainty: 0.78 is a model output, not ground truth — true probability band likely 0.72–0.83\",\n      \"Injury/lineup risk: If PSG key attackers are rested or suspended, true probability shifts materially — verify lineups before execution\",\n      \"Low volume warning: $28,700 volume is the lowest of the top 3 markets — thinner order book means slippage risk on entry\",\n      \"Ligue 1 fixture scheduling: European competition fatigue could affect PSG squad depth\"\n    ],\n\n    \"recommendation\": {\n      \"action\": \"BUY\",\n      \"size_usd\": 25,\n      \"reasoning\": \"Highest EV of the four markets at +20.0% per dollar. Kelly confirms sizing at $25, just under our $27 hard cap. The market is pricing in derby chaos discount that our model believes is overstated given PSG's home dominance. Half-Kelly sizing respects model uncertainty. Pre-trade checklist: confirm PSG starting XI, verify no key injuries reported, check Polymarket order book depth before placing to minimize slippage.\"\n    }\n  },\n\n  \"other_opportunities\": {\n    \"chelsea_vs_burnley\": {\n      \"action\": \"PASS\",\n      \"ev_per_dollar\": \"+8.65%\",\n      \"reasoning\": \"Edge exists (0.88 true vs 0.81 market) but at YES 0.81 the payout is only 0.2346x — thin margin for error, and we already hold a $20 open position on this market; adding more concentrates risk on one fixture.\"\n    },\n    \"barcelona_vs_villarreal\": {\n      \"action\": \"PASS\",\n      \"ev_per_dollar\": \"-2.78%\",\n      \"reasoning\": \"Negative EV — scout estimate of 0.70 is BELOW the market price of 0.72, meaning the market already prices this more favorably than our model; no edge, do not trade.\"\n    },\n    \"mallorca_vs_espanyol\": {\n      \"action\": \"PASS\",\n      \"ev_per_dollar\": \"+1.96%\",\n      \"reasoning\": \"Marginal positive EV (+1.96%) with only $2,992 volume — edge is within model error bands and liquidity is insufficient to justify position; risk/reward does not clear the bar.\"\n    }\n  },\n\n  \"bankroll_summary\": {\n    \"current_bankroll_usdc\": 135,\n    \"existing_open_position\": \"Chelsea YES $20 @ 0.81\",\n    \"proposed_new_position\": \"PSG YES $25 @ 0.65\",\n    \"total_capital_at_risk\": 45,\n    \"pct_bankroll_at_risk\": \"33.3%\",\n    \"architect_note\": \"Two concurrent positions puts 33% of bankroll at risk. Acceptable given both are in separate leagues with uncorrelated outcomes, but monitor closely. Do not add further positions until one resolves.\"\n  }\n}\n```"
+      }
+    ],
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "usage": {
+      "input_tokens": 4010,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 0
+      },
+      "output_tokens": 1591,
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  }
+}

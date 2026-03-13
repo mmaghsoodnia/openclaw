@@ -1,0 +1,34 @@
+{
+  "benchmark_metadata": {
+    "elapsed_ms": 32837,
+    "timestamp": "2026-03-13T15:09:33Z"
+  },
+  "api_response": {
+    "id": "3c18774d-bb78-45e7-94e9-d1463fd00eb6",
+    "object": "chat.completion",
+    "created": 1773414912,
+    "model": "deepseek-chat",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "```json\n{\n  \"primary_opportunity\": {\n    \"event\": \"PSG vs Marseille (Ligue 1)\",\n    \"thesis\": \"PSG holds significant home advantage in a heated derby with Marseille. Scout's analysis indicates the market is underestimating PSG's true win probability (0.78 vs market-implied 0.65). This 13 percentage point discrepancy represents the largest edge among all scanned opportunities. PSG's dominance at Parc des Princes combined with Marseille's inconsistent away form creates a high-conviction value bet.\",\n    \"ev_calculation\": \"Market price = 0.65 → implied probability = 0.65. True probability estimate = 0.78. Edge = 0.78 - 0.65 = 0.13. Expected value per $1 bet = (0.78 * (1/0.65 - 1)) - (0.22 * 1) = (0.78 * 0.5385) - 0.22 = 0.420 - 0.22 = 0.20. EV = 20%.\",\n    \"kelly_fraction\": \"Kelly = (bp - q) / b where b = (1/0.65 - 1) = 0.5385, p = 0.78, q = 0.22. Kelly = (0.5385*0.78 - 0.22) / 0.5385 = (0.420 - 0.22) / 0.5385 = 0.20 / 0.5385 = 0.3715 ≈ 37.15% of bankroll.\",\n    \"recommended_size_usd\": \"$27.00 (capped at 20% risk limit, which is below full Kelly)\",\n    \"confidence\": 8,\n    \"risk_factors\": [\n      \"Derby match volatility\",\n      \"PSG potential rotation before Champions League\",\n      \"Marseille's motivation in rivalry game\",\n      \"Lower liquidity ($450k) than top Premier League markets\"\n    ],\n    \"recommendation\": \"BUY YES at 0.65\"\n  },\n  \"other_opportunities\": [\n    {\n      \"event\": \"Chelsea vs Burnley\",\n      \"recommendation\": \"PASS\",\n      \"reasoning\": \"Edge exists (0.88 vs 0.81) but insufficient after accounting for 5% Polymarket fee; marginal EV.\"\n    },\n    {\n      \"event\": \"Barcelona vs Villarreal\",\n      \"recommendation\": \"PASS\",\n      \"reasoning\": \"Market accurately priced (0.72 vs 0.70 estimate); no meaningful edge.\"\n    },\n    {\n      \"event\": \"RCD Mallorca vs RCD Espanyol\",\n      \"recommendation\": \"PASS\",\n      \"reasoning\": \"Small edge (0.45 vs 0.40) but low volume/liquidity and mid-table uncertainty; not worth position.\"\n    }\n  ]\n}\n```"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 3598,
+      "completion_tokens": 642,
+      "total_tokens": 4240,
+      "prompt_tokens_details": {
+        "cached_tokens": 3584
+      },
+      "prompt_cache_hit_tokens": 3584,
+      "prompt_cache_miss_tokens": 14
+    },
+    "system_fingerprint": "fp_eaab8d114b_prod0820_fp8_kvcache"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "benchmark_metadata": {
+    "elapsed_ms": 98378,
+    "timestamp": "2026-03-13T15:09:33Z"
+  },
+  "api_response": {
+    "id": "718f275b-a895-4a3f-a2ee-f14188bb9700",
+    "object": "chat.completion",
+    "created": 1773414635,
+    "model": "deepseek-reasoner",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "reasoning_content": "We are given scout's data on 4 soccer markets. We have:\n - Market prices (YES and NO) and scout's estimated true probability for the YES outcome.\n - Volume and liquidity.\n - Some context.\n\n We are to build a thesis for the highest-EV opportunity, calculate expected value, recommend position size using Kelly criterion, and output a structured JSON.\n\n Steps:\n 1. For each market, calculate the expected value (EV) for buying YES and for buying NO.\n    - The EV for buying YES at price p (where p is the cost of a share that pays $1 if YES) is:\n        EV_yes = (true_prob * (1 - p)) - ((1 - true_prob) * p)\n        This is because with probability true_prob, we gain (1-p) and with probability (1-true_prob) we lose p.\n\n    Alternatively, we can think in terms of odds:\n        If we buy YES at price p, our expected profit per dollar invested (if we invest $1 to buy 1/p shares) is:\n        expected_profit_per_dollar = (true_prob * (1/p - 1)) - (1 - true_prob) * 1\n        But note: the above EV formula is for a $1 bet that returns (1/p) if YES (so profit = 1/p - 1) and loses $1 if NO.\n\n    However, note that in Polymarket, the price p is the cost of a share that pays $1 if the event occurs. So if we invest $1, we get 1/p shares, and if YES, we get $1/p, so profit = (1/p - 1). If NO, we get $0, so loss = $1.\n\n    So the expected value of a $1 investment (or per dollar) is:\n        E = true_prob * (1/p - 1) - (1 - true_prob) * 1\n          = true_prob * (1/p) - true_prob - 1 + true_prob\n          = true_prob * (1/p) - 1\n\n    Alternatively, we can compute the expected value of buying one share (which costs p) and pays $1 if YES:\n        E_share = true_prob * (1 - p) - (1 - true_prob) * p\n                = true_prob - p\n\n    So the expected value per share is (true_prob - p). This is simpler.\n\n    Similarly, for buying NO at price (1-p) [since YES+NO=1], the expected value per share (paying $1 if NO) is:\n        E_share_NO = (1 - true_prob) - (1-p) = (1 - true_prob) - (1-p) = p - true_prob\n\n    So we can compute the expected value per share for both sides.\n\n 2. However, note that the market price might be efficient. We are given scout's estimated true probability.\n\n 3. We are also given a bankroll of $135 and a risk limit of 20% ($27) per trade.\n\n 4. We are to use the Kelly criterion to determine the optimal fraction of bankroll to bet.\n\n    The Kelly criterion for a bet with two outcomes (win with probability p, lose with probability q=1-p) and odds b (if you win, you get b times your bet, and you lose your bet if you lose) is:\n        f* = (p * (b+1) - 1) / b\n\n    But note: In our case, if we buy YES at price p, then for every $1 bet, we get (1/p) if YES (so b = (1/p) - 1) and we lose $1 if NO.\n\n    Alternatively, we can use the formula in terms of the market price and our estimated probability.\n\n    Let:\n        p_market = price of YES share (so cost of one share that pays $1 if YES)\n        p_true = our estimated probability of YES\n\n    Then, if we buy YES:\n        We bet $1 to buy 1/p_market shares.\n        With probability p_true, we win (1/p_market - 1) profit.\n        With probability (1-p_true), we lose $1.\n\n        So the odds b = (1/p_market - 1) = (1-p_market)/p_market.\n\n        Then the Kelly fraction is:\n            f = [p_true * (b+1) - 1] / b\n              = [p_true * (1/p_market) - 1] / b\n              = [p_true/p_market - 1] / [(1-p_market)/p_market]\n              = (p_true - p_market) / (1-p_market)\n\n        Alternatively, note that the expected value per dollar bet (as above) is:\n            E = p_true * (1/p_market) - 1\n\n        and the variance (or the odds) are captured by b.\n\n    However, note that the above formula for f is for the fraction of bankroll to bet on this outcome.\n\n    Similarly, for buying NO:\n        Let q_market = price of NO share = 1 - p_market\n        q_true = 1 - p_true\n\n        Then, if we buy NO at price q_market, we get 1/q_market shares for $1, and if NO occurs we get $1/q_market, so profit = (1/q_market - 1) with probability q_true.\n        The odds b' = (1/q_market - 1) = (1 - q_market)/q_market = p_market/q_market.\n\n        Then the Kelly fraction for buying NO is:\n            f_NO = [q_true * (b'+1) - 1] / b'\n                 = [q_true * (1/q_market) - 1] / b'\n                 = [q_true/q_market - 1] / [p_market/q_market]\n                 = (q_true - q_market) / p_market\n\n        But note: q_true = 1-p_true, q_market = 1-p_market.\n\n        So f_NO = [(1-p_true) - (1-p_market)] / p_market = (p_market - p_true) / p_market\n\n    However, note that the above formulas are for the fraction of bankroll to bet on each outcome separately. We must consider which side (if any) has positive EV.\n\n 5. We are only allowed to bet up to 20% of bankroll ($27) per trade. So if Kelly recommends more than 0.2, we cap at 0.2.\n\n 6. We are to output for the highest-EV opportunity, and briefly assess the others.\n\n Let's compute for each market:\n\n Market 1: Chelsea vs Burnley\n   p_market = 0.81\n   p_true = 0.88\n   EV_yes_share = p_true - p_market = 0.07\n   EV_yes_per_dollar = (p_true/p_market) - 1 = (0.88/0.81) - 1 ≈ 1.0864 - 1 = 0.0864\n   Kelly fraction for YES: f_yes = (0.88 - 0.81) / (1 - 0.81) = 0.07 / 0.19 ≈ 0.3684 (36.84%)\n   But we are capped at 20% (0.2) of bankroll.\n\n   For NO:\n        EV_no_share = (1-p_true) - (1-p_market) = (0.12) - (0.19) = -0.07\n        So negative EV, so we don't bet NO.\n\n Market 2: Barcelona vs Villarreal\n   p_market = 0.72\n   p_true = 0.70\n   EV_yes_share = 0.70 - 0.72 = -0.02\n   EV_yes_per_dollar = (0.70/0.72) - 1 ≈ -0.0278\n   So negative EV for YES.\n   For NO:\n        q_market = 0.28, q_true = 0.30\n        EV_no_share = q_true - q_market = 0.30 - 0.28 = 0.02\n        EV_no_per_dollar = (0.30/0.28) - 1 ≈ 1.0714 - 1 = 0.0714\n        Kelly fraction for NO: f_no = (q_true - q_market) / p_market = (0.30 - 0.28) / 0.72 = 0.02/0.72 ≈ 0.0278 (2.78%)\n\n Market 3: PSG vs Marseille\n   p_market = 0.65\n   p_true = 0.78\n   EV_yes_share = 0.78 - 0.65 = 0.13\n   EV_yes_per_dollar = (0.78/0.65) - 1 = 1.2 - 1 = 0.2\n   Kelly fraction for YES: f_yes = (0.78 - 0.65) / (1 - 0.65) = 0.13 / 0.35 ≈ 0.3714 (37.14%)\n   Capped at 20%.\n\n Market 4: RCD Mallorca vs RCD Espanyol\n   p_market = 0.40\n"
+        },
+        "logprobs": null,
+        "finish_reason": "length"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 3598,
+      "completion_tokens": 2048,
+      "total_tokens": 5646,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 2048
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 3598
+    },
+    "system_fingerprint": "fp_eaab8d114b_prod0820_fp8_kvcache"
+  }
+}
