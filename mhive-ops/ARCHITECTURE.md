@@ -413,6 +413,27 @@ the patch and confirm back via Telegram. To resume: _"Resume normal operations"_
 
 ---
 
+## Agent Model Matrix (Layer 1)
+
+Model assignments are in `openclaw.json` under `agents.list[].model` and `agents.defaults.model`.
+The gateway hot-reloads config changes — no restart needed.
+
+| Category    | Agents                                                               | Primary                     | Why                                    |
+| ----------- | -------------------------------------------------------------------- | --------------------------- | -------------------------------------- |
+| Planners    | mhive, hive-pm, hive-risk, book-pm                                  | anthropic/claude-sonnet-4-6 | Quality critical (4.7/5), $0.12/call   |
+| Researchers | scout, analyst, contrarian, quant, auditor, book-researcher, etc.    | xai/grok-4-1-fast           | Best value (3.0/5), $0.003/call, 22s   |
+| Doers       | hive-trader, book-publisher                                          | xai/grok-4-1-fast           | Speed + value, same as researchers     |
+
+All agents have fallback chains: primary → fallback 1 → fallback 2. See `openclaw.json` for exact chains.
+
+**Benchmark framework:** `mhive-ops/benchmarks/` — run `run-benchmark.sh` on VPS to test new models
+before assigning them. See `mhive-ops/benchmarks/README.md` for full workflow. Results accumulate
+in `mhive-ops/benchmarks/results/YYYY-MM-DD/` with quality scores, timing, and raw responses.
+
+**Last benchmarked:** 2026-03-13 (8 models × 3 prompts). See `mhive-ops/benchmarks/results/2026-03-13/summary.md`.
+
+---
+
 ## Session Start Checklist (for any future Claude/operator session)
 
 1. Read `TODO.md` at project root
