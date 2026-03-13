@@ -18,6 +18,15 @@
     "output_cost_per_mtok": 1.1
   },
   {
+    "id": "claude-opus-4-20250514",
+    "provider": "anthropic",
+    "api_type": "anthropic",
+    "endpoint": "https://api.anthropic.com/v1/messages",
+    "env_key": "ANTHROPIC_API_KEY",
+    "input_cost_per_mtok": 15.0,
+    "output_cost_per_mtok": 75.0
+  },
+  {
     "id": "claude-sonnet-4-6-20250514",
     "provider": "anthropic",
     "api_type": "anthropic",

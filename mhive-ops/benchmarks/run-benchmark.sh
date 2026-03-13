@@ -129,6 +129,7 @@ declare -A MODEL_ENDPOINTS MODEL_TYPES MODEL_KEYS MODEL_COST_IN MODEL_COST_OUT
 
 MODEL_ENDPOINTS[deepseek-reasoner]="https://api.deepseek.com/chat/completions"
 MODEL_ENDPOINTS[deepseek-chat]="https://api.deepseek.com/chat/completions"
+MODEL_ENDPOINTS[claude-opus-4-6]="https://api.anthropic.com/v1/messages"
 MODEL_ENDPOINTS[claude-sonnet-4-6]="https://api.anthropic.com/v1/messages"
 MODEL_ENDPOINTS[claude-sonnet-4-5-20250929]="https://api.anthropic.com/v1/messages"
 MODEL_ENDPOINTS[gpt-4o]="https://api.openai.com/v1/chat/completions"
@@ -137,6 +138,7 @@ MODEL_ENDPOINTS[grok-4-1-fast]="https://api.x.ai/v1/chat/completions"
 
 MODEL_TYPES[deepseek-reasoner]="openai"
 MODEL_TYPES[deepseek-chat]="openai"
+MODEL_TYPES[claude-opus-4-6]="anthropic"
 MODEL_TYPES[claude-sonnet-4-6]="anthropic"
 MODEL_TYPES[claude-sonnet-4-5-20250929]="anthropic"
 MODEL_TYPES[gpt-4o]="openai"
@@ -145,6 +147,7 @@ MODEL_TYPES[grok-4-1-fast]="openai"
 
 MODEL_KEYS[deepseek-reasoner]="$DEEPSEEK_API_KEY"
 MODEL_KEYS[deepseek-chat]="$DEEPSEEK_API_KEY"
+MODEL_KEYS[claude-opus-4-6]="$ANTHROPIC_API_KEY"
 MODEL_KEYS[claude-sonnet-4-6]="$ANTHROPIC_API_KEY"
 MODEL_KEYS[claude-sonnet-4-5-20250929]="$ANTHROPIC_API_KEY"
 MODEL_KEYS[gpt-4o]="$OPENAI_API_KEY"
@@ -153,13 +156,14 @@ MODEL_KEYS[grok-4-1-fast]="$XAI_API_KEY"
 
 MODEL_COST_IN[deepseek-reasoner]=0.55;  MODEL_COST_OUT[deepseek-reasoner]=2.19
 MODEL_COST_IN[deepseek-chat]=0.27;      MODEL_COST_OUT[deepseek-chat]=1.10
+MODEL_COST_IN[claude-opus-4-6]=15.00;   MODEL_COST_OUT[claude-opus-4-6]=75.00
 MODEL_COST_IN[claude-sonnet-4-6]=3.00;  MODEL_COST_OUT[claude-sonnet-4-6]=15.00
 MODEL_COST_IN[claude-sonnet-4-5-20250929]=3.00;  MODEL_COST_OUT[claude-sonnet-4-5-20250929]=15.00
 MODEL_COST_IN[gpt-4o]=2.50;             MODEL_COST_OUT[gpt-4o]=10.00
 MODEL_COST_IN[gemini-2.0-flash]=0.10;   MODEL_COST_OUT[gemini-2.0-flash]=0.40
 MODEL_COST_IN[grok-4-1-fast]=0.20;      MODEL_COST_OUT[grok-4-1-fast]=0.50
 
-ALL_MODELS="deepseek-reasoner deepseek-chat claude-sonnet-4-6 claude-sonnet-4-5-20250929 gpt-4o gemini-2.0-flash grok-4-1-fast"
+ALL_MODELS="deepseek-reasoner deepseek-chat claude-opus-4-6 claude-sonnet-4-6 claude-sonnet-4-5-20250929 gpt-4o gemini-2.0-flash grok-4-1-fast"
 
 # --- Prompt map ---
 declare -A PROMPT_TEXTS PROMPT_CONTEXTS PROMPT_SYSPREFIXES
@@ -386,6 +390,7 @@ cat >> "$RESULTS_DIR/summary.md" << 'SUMMARY_EOF2'
 |-------|-------------|----------|-----------|---------|-------|
 | deepseek-reasoner | | | | | |
 | deepseek-chat | | | | | |
+| claude-opus-4-6 | | | | | |
 | claude-sonnet-4-6 | | | | | |
 | claude-sonnet-4-5 | | | | | |
 | gpt-4o | | | | | |

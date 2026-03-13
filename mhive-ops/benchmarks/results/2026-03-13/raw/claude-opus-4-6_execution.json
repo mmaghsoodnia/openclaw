@@ -1,0 +1,32 @@
+{
+  "benchmark_metadata": {
+    "elapsed_ms": 35730,
+    "timestamp": "2026-03-13T20:10:46Z"
+  },
+  "api_response": {
+    "model": "claude-opus-4-6",
+    "id": "msg_016vLhMVMQLdoK3fa5qQP7YC",
+    "type": "message",
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "\n\n# Executing Approved Trade #2026-0313-001\n\n## Trade Summary\n| Field | Value |\n|-------|-------|\n| **Event** | PSG vs Marseille — Ligue 1 |\n| **Side** | BUY YES (PSG win) |\n| **Limit Price** | $0.65 |\n| **Size** | $20 USDC |\n| **Shares (if filled at limit)** | ~30.77 YES tokens |\n\n---\n\n## Step 1: Pre-Flight Checks\n\n### 1a. Verify USDC Balance\n\n```tool\nexec({\n  \"cmd\": \"python3 -c \\\"\\\nfrom py_clob_client.client import ClobClient\\n\\\nclient = ClobClient(\\\n  host='https://clob.polymarket.com',\\\n  key='${POLY_PRIVATE_KEY}',\\\n  chain_id=137,\\\n  signature_type=2\\\n)\\n\\\nprint(client.get_balance_allowance('USDC'))\\\n\\\"\"\n})\n```\n\n**Expected response:**\n```json\n{\"balance\": \"135000000\", \"allowance\": \"...\"}\n```\n> ✅ Balance = $135.00 USDC. Need $20. **PASS**\n\n**Error handling:** If balance < $20, abort and notify Risk:\n```\nsessions_send(\"hive-risk\", \"TRADE #2026-0313-001 ABORTED: Insufficient USDC balance. Have ${balance}, need $20.\")\n```\n\n### 1b. Resolve Market / Condition ID & Token ID\n\n```tool\nexec({\n  \"cmd\": \"python3 -c \\\"\\\nfrom py_clob_client.client import ClobClient\\n\\\nclient = ClobClient(\\\n  host='https://clob.polymarket.com',\\\n  chain_id=137\\\n)\\n\\\nmarkets = client.get_markets()\\n\\\n# Search for PSG vs Marseille market\\n\\\nfor m in markets:\\n\\\n    if 'PSG' in m.get('question','') and 'Marseille' in m.get('question',''):\\n\\\n        print('condition_id:', m['condition_id'])\\n\\\n        print('question:', m['question'])\\n\\\n        for t in m.get('tokens', []):\\n\\\n            print('token:', t)\\n\\\n        break\\n\\\n\\\"\"\n})\n```\n\n> **Note:** The CLOB `get_markets()` endpoint is paginated. In practice I may need `get_market(condition_id)` if I already have the condition_id, or search via `GET https://clob.polymarket.com/markets?next_cursor=...` or the Gamma API `GET https://gamma-api.polymarket.com/events?slug=...`. If the slug/condition_id is unknown, I would use:\n\n```tool\nweb_fetch({\n  \"url\": \"https://gamma-api.polymarket.com/events?closed=false&title=PSG+Marseille\",\n  \"method\": \"GET\"\n})\n```\n\n**Expected:** Returns event with markets array. Extract:\n- `condition_id`: e.g. `0xabc123...`\n- `YES token_id`: e.g. `\"71321045...\"` (the numeric token ID for the YES outcome)\n\n### 1c. Validate Current Market Price\n\n```tool\nexec({\n  \"cmd\": \"python3 -c \\\"\\\nfrom py_clob_client.client import ClobClient\\n\\\nclient = ClobClient(host='https://clob.polymarket.com', chain_id=137)\\n\\\nbook = client.get_order_book('TOKEN_ID_YES_PLACEHOLDER')\\n\\\nprint('Best ask:', book.asks[0] if book.asks else 'NO ASKS')\\n\\\nprint('Best bid:', book.bids[0] if book.bids else 'NO BIDS')\\n\\\nprint('Midpoint:', client.get_midpoint('TOKEN_ID_YES_PLACEHOLDER'))\\n\\\n\\\"\"\n})\n```\n\n**Validation rules:**\n- ✅ If best ask ≤ $0.65 → limit order will fill immediately (or partially)\n- ✅ If best ask > $0.65 → limit order rests on book; acceptable\n- ❌ If midpoint has drifted > 15% from $0.65 (i.e., mid > $0.75 or mid < $0.55) → **PAUSE**, notify Risk for re-approval\n- ❌ If spread > 10 cents → flag thin liquidity warning\n\n```\n# Drift check pseudocode\nmid = float(midpoint)\nif abs(mid - 0.65) / 0.65 > 0.15:\n    sessions_send(\"hive-risk\", \"TRADE #2026-0313-001 PAUSED: Price drifted. Mid={mid}, target=0.65. Requesting re-approval.\")\n    sys.exit(1)\n```\n\n---\n\n## Step 2: USDC Approval (Conditional)\n\nThe Polymarket CLOB uses the CTF Exchange contract. The `py_clob_client` handles approval via `set_allowance`, but we check first:\n\n```tool\nexec({\n  \"cmd\": \"python3 -c \\\"\\\nfrom py_clob_client.client import ClobClient\\n\\\nclient = ClobClient(\\\n  host='https://clob.polymarket.com',\\\n  key='${POLY_PRIVATE_KEY}',\\\n  chain_id=137,\\\n  signature_type=2\\\n)\\n\\\nbal = client.get_balance_allowance('USDC')\\n\\\nallowance = int(bal.get('allowance', '0'))\\n\\\nprint('Current allowance:', allowance)\\n\\\nif allowance < 20_000_000:  # 20 USDC in 6-decimal\\n\\\n    print('Approving...')\\n\\\n    # The client proxy approval sets max allowance to the CTF Exchange\\n\\\n    client.set_allowance('USDC', 2**128)  # or use approve_max()\\n\\\n    print('Approval TX submitted')\\n\\\nelse:\\n\\\n    print('Allowance sufficient, skipping approval')\\n\\\n\\\"\"\n})\n```\n\n> **Note:** If using the proxy wallet (signature_type=2), approvals are handled via the Polymarket proxy contract and may already be set. The `py_clob_client` abstracts this. If approval TX fails, retry once, then abort.\n\n---\n\n## Step 3: Order Placement\n\nThis is the core execution step. Polymarket CLOB uses EIP-712 signed orders.\n\n```tool\nexec({\n  \"cmd\": \"python3 -c \\\"\\\nfrom py_clob_client.client import ClobClient\\n\\\nfrom py_clob_client.clob_types import OrderArgs, OrderType\\n\\\n\\n\\\nclient = ClobClient(\\\n  host='https://clob.polymarket.com',\\\n  key='${POLY_PRIVATE_KEY}',\\\n  chain_id=137,\\\n  signature_type=2,\\\n  funder='0x7a3B...4f2E'\\\n)\\n\\\n\\n\\\n# Derive API credentials (needed for authenticated endpoints)\\n\\\nclient.set_api_creds(client.create_or_derive_api_creds())\\n\\\n\\n\\\nTOKEN_ID_YES = 'RESOLVED_YES_TOKEN_ID'  # from Step 1b\\n\\\n\\n\\\n# Build the order\\n\\\norder_args = OrderArgs(\\n\\\n    token_id=TOKEN_ID_YES,\\n\\\n    price=0.65,\\n\\\n    size=20.0,       # $20 USDC cost (will buy ~30.77 shares at 0.65)\\n\\\n    side='BUY',\\n\\\n    order_type=OrderType.GTC,  # Good-til-cancelled\\n\\\n)\\n\\\n\\n\\\n# Create signed order\\n\\\nsigned_order = client.create_order(order_args)\\n\\\nprint('Signed order created:', signed_order)\\n\\\n\\n\\\n# Post to CLOB\\n\\\nresponse = client.post_order(signed_order)\\n"
+      }
+    ],
+    "stop_reason": "max_tokens",
+    "stop_sequence": null,
+    "usage": {
+      "input_tokens": 372,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 0
+      },
+      "output_tokens": 2048,
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  }
+}
