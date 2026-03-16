@@ -157,6 +157,11 @@ export default defineConfig([
     },
   }),
   nodeBuildConfig({
+    // Emit plugin runtime as a standalone file so production/Docker builds can
+    // resolve it via resolvePluginRuntimeModulePath (dist/plugins/runtime/index.js).
+    entry: { "plugins/runtime/index": "src/plugins/runtime/index.ts" },
+  }),
+  nodeBuildConfig({
     entry: "src/extensionAPI.ts",
   }),
   nodeBuildConfig({
