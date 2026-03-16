@@ -40,47 +40,36 @@
 
 ## Completed
 
-- [x] **Install gh CLI on Mac** — Homebrew + gh installed and authenticated as `mmaghsoodnia` _(2026-02-22)_
-- [x] **Clone openclaw fork to Mac** — `~/openclaw` _(2026-02-22)_
-- [x] **Set up SSH to VPS from Mac** — Generated ed25519 key, added to `root@100.71.224.113` _(2026-02-22)_
-- [x] **Fix maple-proxy unhealthy status** — Restarted container; health check is a cosmetic issue in upstream image. Proxy responds 200. _(2026-02-22)_
-- [x] **Update OpenClaw on VPS** — CLI updated from `2026.2.15` → `2026.2.21-2`, Docker image rebuilt from fork code _(2026-02-22)_
-- [x] **Fix VPS git remotes** — Changed `origin` from upstream to `mmaghsoodnia/openclaw`, kept upstream as `upstream` _(2026-02-22)_
-- [x] **Sync VPS with fork** — Pulled latest from `origin/main`, rebuilt Docker image, restarted gateway. All 3 Telegram bots running _(2026-02-22)_
-- [x] **Fix missing memory files** — Created hive-risk daily memory and heartbeat-state.json _(2026-02-22)_
-- [x] **Move confidential keys to 1Password vault "openclaw"** — All API keys migrated (13 items total) _(2026-02-22)_
-- [x] **Install 1Password CLI on Mac and VPS** — `op` v2.32.1 on both. Mac: desktop app integration. VPS: service account token _(2026-02-22)_
-- [x] **Set up 1Password service account for VPS** — Token stored at `/root/.op-service-account-token` (600 perms), loaded via `.bashrc`/`.profile`. Headless access to OpenClaw vault confirmed _(2026-02-22)_
-- [x] **Install gog CLI (built from source)** — Security audit passed (all deps legitimate, no backdoors). Built from source v0.11.0 on VPS. Homebrew on Mac _(2026-02-22)_
-- [x] **Set up gog with file keyring + 1Password** — No keychain/biometric prompts. `GOG_KEYRING_PASSWORD` injected from 1Password at runtime _(2026-02-22)_
-- [x] **Authenticate gog for mhive@bigbraincap.com** — OAuth completed with Gmail, Calendar, Drive, Contacts, Docs, Sheets scopes _(2026-02-22)_
-- [x] **Enable Google APIs** — Calendar, Contacts (People), Sheets, Docs APIs enabled in Google Cloud project. All 6 services confirmed working _(2026-02-22)_
-- [x] **Copy gog to VPS + Docker container** — Config/keyring copied to `/root/.config/gogcli/`, binary mounted into container via `docker-compose.override.yml`. All 6 Google services working from inside container _(2026-02-22)_
-- [x] **Add secrets handling security rules** — Global `~/.claude/CLAUDE.md`, project `.claude/CLAUDE.md`, TODO.md header, and project memory all updated _(2026-02-22)_
-- [x] **Create push-to-VPS deploy script** — `mhive-ops/deploy-vps.sh` with `--skip-push` and `--skip-build` flags. Pushes to GitHub → pulls on VPS → rebuilds Docker → restarts gateway _(2026-02-22)_
-- [x] **Update `mhive-ops/approve-device.sh` IP** — Changed from old public IP `76.13.79.239` to Tailscale IP `100.71.224.113` _(2026-02-22)_
-- [x] **Fix maple-proxy health check** — Added maple-proxy service to `docker-compose.override.yml` on VPS with corrected health check on port 3000. Container now reports healthy _(2026-02-22)_
-- [x] **Move project to `~/Projects/openclaw/`** — Relocated from `~/openclaw/` to correct path, merged `.claude` configs, verified git integrity _(2026-02-22)_
-- [x] **Install Node.js + pnpm on Mac** — Node.js 22.22.0 via Homebrew, pnpm 10.23.0 via corepack _(2026-02-22)_
-- [x] **Verify local build + gateway** — `pnpm install` + `pnpm build` clean. Gateway tested in isolated mode (no channels, no agents) — HTTP 200 confirmed _(2026-02-22)_
-- [x] **Fix PolyHive Polymarket betting** — Root cause: Python venv built with 3.14 on Mac Studio, container has 3.11. Fix: rebuilt venv inside Docker container, migrated Polymarket credentials to 1Password ("Polymarket Wallet" + "Polymarket API" items), created `.env.tpl` for `op inject`, redacted hardcoded private key from Trader RUNBOOK. Verified: `py_clob_client` import, market scanner (8 leagues, 113 events), wallet check (CLOB API connected, found live orders). Agent self-heal message sent via mhive. _(2026-02-23)_
-- [x] **Rotate ElevenLabs Talk API Key** — Regenerated in ElevenLabs dashboard, updated in 1Password, injected into openclaw.json via `op inject`. _(2026-02-24)_
-- [x] **Rotate Google OAuth client secret** — Rotated in Google Cloud Console, updated in 1Password, re-authenticated via `gog auth`. _(2026-02-24)_
-- [x] **Make Python venv persistent in Docker** — Added `python3-pip python3-venv` to Dockerfile (committed to fork). Created `requirements.txt` in the-hive workspace with pinned versions. Added startup venv health-check wrapper to `docker-compose.override.yml` on VPS — gateway auto-bootstraps venv if missing/broken. Redeployed and verified. _(2026-02-24)_
-- [x] **Disable WhatsApp channel** — Emergency fix after bot sent unsolicited pairing messages to contacts. Disabled both plugin and channel config on VPS. Baileys session preserved. See session log `2026-02-25.md`. _(2026-02-25)_
-- [x] **Set up local staging environment** — Full Docker staging on Mac mirroring VPS. Scripts in `mhive-ops/staging/` (start/stop/rebuild/sync). Staging Telegram bot `@mhive_stage_bot` verified working end-to-end. _(2026-02-25)_
-- [x] **Merge upstream/main into fork** — Updated fork from v2026.2.18 to latest upstream (2286 commits). Resolved Dockerfile conflict (kept python3-pip + upstream --chown). _(2026-02-25)_
-- [x] **Zero hardcoded secrets** — All API keys now injected from 1Password via Docker env vars. Cleared all 14 agents' auth-profiles.json. Replaced hardcoded maple/elevenlabs keys in openclaw.json with `${VAR}` refs. Templates: `mhive-ops/.env.vps.tpl` + `.env.staging.tpl`. _(2026-02-27)_
-- [x] **Set up desktop gog MCP service** — Created MCP server at `~/.local/share/gog-mcp/` (25 tools wrapping gog CLI). Registered in Claude Code and Claude Desktop. Uses macOS Keychain auth. Desktop-only — does not affect openclaw's Docker-based gog setup. _(2026-03-03)_
-- [x] **Fix staging gog binary architecture** — `~/.openclaw-staging/bin/gog` was a macOS Mach-O binary that couldn't run in Docker Desktop's Linux containers. Built linux/arm64 binary from source (`steipete/gogcli`, v0.12.0-dev). _(2026-03-03)_
-- [x] **Fix staging gog credentials from 1Password** — Created `mhive-ops/staging/setup-gog.sh` that reconstructs gogcli directory from 1Password (credentials.json via `op inject`, keyring tokens via `op read`). Updated `docker-compose.staging.yml` to mount from `~/.openclaw-staging/gogcli/` instead of `~/.config/gogcli/`. Integrated into `start.sh` and `rebuild.sh`. _(2026-03-03)_
-- [x] **Fix Telegram bots not responding** — mhive had disabled both `channels.telegram.enabled` and `plugins.entries.telegram.enabled` when asked to "turn everything off." Re-enabled both, ran `doctor --fix` to apply config migration, confirmed all 3 bots started. _(2026-03-04)_
-- [x] **Add emergency cost kill switch** — Documented correct 2-lever kill switch in all 14 agent TOOLS.md files on VPS (synced to staging), `mhive-ops/ARCHITECTURE.md`, and `MEMORY.md`. Kill: `cron.enabled=false` + `agents.defaults.heartbeat.every=""`. Channels/Telegram stay ON throughout. Trigger phrase to mhive: "Emergency stop — kill the spending". _(2026-03-04)_
-- [x] **Merge upstream v2026.3.2 + deploy** — Merged 1600 upstream commits (v2026.3.1 and v2026.3.2) into fork. Merge was clean — no conflicts. Dockerfile preserved our Python layer (`python3-pip python3-venv` for PolyHive) plus gained upstream HEALTHCHECK, OCI labels, and Docker CLI sandbox support. Pushed to fork, deployed to VPS (`docker compose up -d`), rebuilt staging. All 4 bots verified running (mhive, percy, bookworm, staging). _(2026-03-06)_
-- [x] **Fix PolyHive agent pipeline (Phase 1 recovery)** — Diagnosed 6 root causes of SCORECARD Phase 1 FAILED (0/8 agents tool-validated). Fixed: (1) Model assignments — Scout→gemini-2.0-flash, Trader→claude-sonnet-4-5 (correct entries in `agents.list`, not invalid nested dict). (2) Wrote 7 RUNBOOKs: Scout (no-hallucination rule + script path), Trader (fixed broken `source activate` → full python path, fixed data path to `the-hive/data/`), PM (replaced FiatKillerHive crypto content with PolyHive procedures), Analyst/Contrarian/Quant/Risk (written from scratch with templates). (3) Updated all 8 TOOLS.md files: prepended RUNBOOK pointer + critical inline rules; fixed `source venv/bin/activate` → full python path; fixed `hive-trader/data/` → `the-hive/data/` in Analyst/Contrarian/Quant/Risk. (4) AGENTS.md Every Session step 5 added: read RUNBOOK.md. Operator notification sent via mhive. Cron remains off pending pipeline verification. _(2026-03-07)_
-- [x] **Implement PolyHive health monitoring system** — Layered audit design: (1) `hive-auditor/RUNBOOK.md` rewritten with PART A (pipeline KPI audit: session counts, cron run log analysis, 5 KPIs computed, AUDIT.md written) + PART B (existing financial reconciliation). (2) `hive-auditor/TOOLS.md` extended with session JSONL paths, cron run log format, Python snippet for last-24h filtering. (3) `auditor-daily-audit` cron job message updated to run full pipeline KPI audit first, then financial reconciliation. (4) `hive-pm/RUNBOOK.md` morning protocol extended with step 0: read AUDIT.md, gate on RED status. Model already set to gemini-2.0-flash. Cron still globally disabled — auditor will produce first AUDIT.md once cron is re-enabled. _(2026-03-10)_
-- [x] **Merge upstream v2026.3.11-beta.1 + deploy** — Merged 1213 upstream commits (v2026.3.2 → v2026.3.11-beta.1). Dockerfile conflict resolved: upstream replaced our Python layer with `OPENCLAW_DOCKER_APT_PACKAGES` build arg — now pass `python3-pip python3-venv` at build time. Added build arg to VPS `docker-compose.override.yml` for persistence. Staging verified, VPS deployed. All 3 bots running (mhive, percy, bookworm). _(2026-03-12)_
-- [x] **Merge upstream to latest + deploy** — Merged 501 upstream commits into fork. One `.gitignore` conflict resolved (kept both `.env.staging` and `docker-compose.override.yml`). Build verified locally, pushed to fork. VPS: rebuilt Docker image, restarted gateway — healthy, all 3 bots running. Staging: rebuilt and verified — healthy, staging bot running. Non-fatal `ANTHROPIC_MODEL_ALIASES` TDZ error during ollama plugin load (gateway recovers). _(2026-03-13)_
+<details>
+<summary>Infrastructure setup — Feb 22–27 (click to expand)</summary>
+
+- [x] Install gh CLI, clone fork, SSH to VPS, fix maple-proxy, update OpenClaw, fix git remotes _(2026-02-22)_
+- [x] Move keys to 1Password (13 items), install op CLI on Mac+VPS, set up service account _(2026-02-22)_
+- [x] Install gog from source (v0.11.0), set up file keyring + 1Password, authenticate, enable Google APIs, copy to VPS+Docker _(2026-02-22)_
+- [x] Add secrets handling rules, create deploy script, fix maple-proxy health check _(2026-02-22)_
+- [x] Move project to `~/Projects/openclaw/`, install Node.js+pnpm, verify local build _(2026-02-22)_
+- [x] Fix PolyHive betting (venv 3.14→3.11 rebuild, Polymarket creds to 1Password) _(2026-02-23)_
+- [x] Rotate ElevenLabs + Google OAuth keys _(2026-02-24)_
+- [x] Make Python venv persistent in Docker (Dockerfile + startup wrapper) _(2026-02-24)_
+- [x] Disable WhatsApp (unsolicited pairing messages), set up local staging, merge upstream _(2026-02-25)_
+- [x] Zero hardcoded secrets — all 14 agents use env var fallback from 1Password _(2026-02-27)_
+
+</details>
+
+<details>
+<summary>Platform & agent ops — Mar 3–13 (click to expand)</summary>
+
+- [x] Set up desktop gog MCP service, fix staging gog binary (linux/arm64) + credentials _(2026-03-03)_
+- [x] Fix Telegram bots (re-enable plugin+channel), add emergency cost kill switch to all 14 TOOLS.md _(2026-03-04)_
+- [x] Merge upstream v2026.3.2 + deploy (1600 commits, Dockerfile preserved) _(2026-03-06)_
+- [x] Fix PolyHive Phase 1 — 6 root causes, 7 RUNBOOKs written, 8 TOOLS.md updated, model assignments corrected _(2026-03-07)_
+- [x] Implement PolyHive audit system — auditor RUNBOOK rewrite, daily KPI audit cron, PM morning gate _(2026-03-10)_
+- [x] Merge upstream v2026.3.11-beta.1 + deploy (Dockerfile→build arg migration) _(2026-03-12)_
+- [x] Merge upstream to latest + deploy (501 commits, all bots running) _(2026-03-13)_
+
+</details>
+
+- [x] **Upgrade mhive programming — health monitoring + authority model** — Diagnosed Scout as example of persistent agent failure (6 root causes: model churn, weak models, no RUNBOOK, broken venv, memory chaos, comms failures). Key insight: Scout doesn't need to be an agent — it's a script wrapper. Built `hive-health.py` diagnostic tool. Updated 8 workspace files on both staging and VPS: HEARTBEAT (Priority 0: health review every other day), SOUL (lifecycle v2026-03-14: role audit + health monitoring steps), MEMORY (3 lessons), HEURISTICS (2 anti-patterns), SCORECARD-TEMPLATE (role audit gate + health tracking), AGENTS (bootstrap checklist), TOOLS (health script docs), RESTRUCTURE.md (new — MM approval template). Defined mhive's authority: can fix models/RUNBOOKs/memory/cron directly; structural changes need MM approval via RESTRUCTURE.md. Fixed mhive's corrupted session (tool_use without tool_result). Cleaned 5 stale workspace files on VPS. _(2026-03-14)_
 
 ---
 
@@ -119,7 +108,7 @@
 - **Pre-task workspace sync (MANDATORY):** Before starting any task involving staging, sync the agent workspace from VPS: `bash mhive-ops/staging/sync-workspace.sh`. This pulls the latest agent memory, soul, and session data so staging tests run against current agent state. Done automatically by `start.sh` and `rebuild.sh`. Falls back to existing files if VPS is unreachable.
 - **Architecture reference:** Full system architecture (two-layer model, context window construction, change ownership table) documented in `mhive-ops/ARCHITECTURE.md`. Read before making changes.
 - **Deployment flow:** Mac/Studio → push to `mmaghsoodnia/openclaw` on GitHub → VPS pulls from `origin` (our fork) → rebuild Docker → restart gateway. Never pull upstream directly on VPS.
-- **Agent system (The Hive):** 14 agents configured — main + 8 PolyHive agents + 5 BookHive agents. Planners: `anthropic/claude-sonnet-4-6`, Researchers/Doers: `xai/grok-4-1-fast`.
+- **Agent system (The Hive):** 11 agents configured — main (mhive) + 4 PolyHive + 1 PolyHive risk + 5 BookHive. Planners (mhive, Percy, risk, book-pm): `anthropic/claude-sonnet-4-6`, Researchers/Doers: `xai/grok-4-1-fast`. Scout replaced by cron-driven market scanner. Trader + Auditor replaced by Python scripts. relo-pm parked. Mhive runs health diagnostics every other day (see `mhive-ops/ARCHITECTURE.md` § "Mhive Health Monitoring").
 - **Local dev (Mac):** Project at `~/Projects/openclaw/`, Node.js 22.22.0 (`/opt/homebrew/opt/node@22/bin`), pnpm 10.23.0 via corepack.
 - **VPS specs:** 31 GB RAM, 387 GB disk (5% used), 4 days uptime as of 2026-02-22.
 - **Docker override on VPS:** `/root/openclaw/docker-compose.override.yml` mounts gog binary/config, passes all secrets from `.env` (generated by `op inject` from `mhive-ops/.env.vps.tpl`).
