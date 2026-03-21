@@ -73,6 +73,9 @@
 - [x] **Verify mhive delegated work + agent cleanup** — Audited mhive's Mar 14-15 output. Scout removed from config (instructed mhive directly), memory cleanup done, BookHive RUNBOOKs written, inter-agent comms confirmed working. Removed 4 ghost agent dirs on VPS (hive-scout, hive-trader, hive-auditor, relo-pm). Agent count: 14 → 11. _(2026-03-16)_
 - [x] **Merge upstream v2026.3.14 + deploy** — Merged 989 upstream commits (clean, no conflicts). Android fixes, browser non-Chrome profiles, Telegram health check proxy, Slack bolt interop, Plugin SDK refactors. Built, pushed, deployed to VPS + staging. _(2026-03-16)_
 - [x] **Fix plugin runtime regression** — Upstream merge introduced `resolvePluginRuntimeModulePath()` which looks for `dist/plugins/runtime/index.js`, but the build config never emitted it as a separate entry. All agent turns failed in Docker with "Unable to resolve plugin runtime module." Fixed by adding `src/plugins/runtime/index.ts` as a standalone build entry in `tsdown.config.ts`. Deployed to both VPS and staging — zero errors. _(2026-03-16)_
+- [x] **Deep clean removed agent artifacts** — Removed workspace dirs for hive-scout (95MB), hive-trader (980KB), hive-auditor (93MB). Purged all stale references from 10+ workspace files (TOOLS.md, RUNBOOK.md, SOUL.md across 6 agents). Updated market scanner cron to write to `the-hive/data/market-scans/`. Deleted obsolete `CRON-JOBS.md`, `AGENT_DEV_PLANS.md`, `WORKFLOW.md`, `SCORECARD.md`. Regenerated `HEALTH.md`. Deleted stale gateway logs (3MB, from Feb 15). _(2026-03-17)_
+- [x] **Fix bookworm Telegram group** — Book PM bot not responding in "Book group". Root cause: mhive added group chat ID (`-5119732747`) to `allowFrom` instead of `groups` config. `allowFrom` only accepts user IDs — group IDs are silently rejected. Also needed `requireMention: false`. Fixed config, documented in mhive's TOOLS.md for future reference. _(2026-03-17)_
+- [x] **LLM benchmark framework + model matrix** — Built benchmark tool (8 models x 3 prompts = 24 tests). Scored quality: Claude Sonnet 4.6 (4.7/5), Grok Fast (3.0/5), Gemini Flash (1.3/5). Rolled back VPS from DeepSeek (cascading timeouts) to stable US models. Split benchmark into standalone project at `~/Projects/llm-bench/` (separate agent manages it). _(2026-03-13 — 2026-03-20)_
 
 ---
 
@@ -92,16 +95,10 @@
   - Verified `setup-gog.sh` can reconstruct the full gogcli directory from 1Password.
   - Staging gog tested end-to-end: Gmail, Calendar, Drive all working from inside Docker container.
 
-- [ ] **Set up staging on Mac Studio** — `[Layer 1 — Operator]`
+- [ ] **Set up staging on Mac Studio** — `[Layer 1 — Operator]` *(Assigned to Mac Studio Claude)*
   - Mac Studio does not have a local staging environment yet. Only the Mac (current dev machine) has one.
   - Replicate the setup from `mhive-ops/staging/` scripts. Needs Docker Desktop, 1Password service account token at `~/.op-service-account-token`, and a linux/arm64 gog binary at `~/.openclaw-staging/bin/gog`.
   - See `mhive-ops/sessions/2026-02-25.md` (staging setup) and `2026-03-03.md` (gog binary fix) for reference.
-
-- [ ] **Enable voice for agents** — `[Layer 1 — Operator]`
-  - ElevenLabs TTS is fully implemented in gateway (`src/tts/`). `talk.apiKey` wired in `openclaw.json`.
-  - ElevenLabs key rotation is done — blocker cleared.
-  - Steps: configure `talk` section per-agent in `openclaw.json` with desired voice IDs. No agent workspace changes needed — pure operator config.
-  - Scope: Telegram voice notes first (simplest). PSTN and WhatsApp voice require additional channel setup.
 
 ---
 

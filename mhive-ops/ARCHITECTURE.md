@@ -426,11 +426,64 @@ The gateway hot-reloads config changes — no restart needed.
 
 All agents have fallback chains: primary → fallback 1 → fallback 2. See `openclaw.json` for exact chains.
 
-**Benchmark framework:** `mhive-ops/benchmarks/` — run `run-benchmark.sh` on VPS to test new models
-before assigning them. See `mhive-ops/benchmarks/README.md` for full workflow. Results accumulate
-in `mhive-ops/benchmarks/results/YYYY-MM-DD/` with quality scores, timing, and raw responses.
+**Benchmark framework:** Separate project at `~/Projects/llm-bench/` (split from openclaw 2026-03-20).
+Run `bash run-benchmark.sh` on VPS to test new models before assigning them. See `llm-bench/CLAUDE.md`
+for full workflow, scoring criteria, and how to apply changes to production.
 
-**Last benchmarked:** 2026-03-13 (8 models × 3 prompts). See `mhive-ops/benchmarks/results/2026-03-13/summary.md`.
+**Last benchmarked:** 2026-03-13 (8 models x 3 prompts). Results in `llm-bench/results/2026-03-13/summary.md`.
+
+---
+
+## Mhive Health Monitoring & Authority (2026-03-14)
+
+Mhive (chief of staff) now has a health monitoring system and defined authority for fixing agent issues.
+
+### Health diagnostic tool
+
+`workspace/the-hive/scripts/hive-health.py` — reads session data, workspace files, delivery queue,
+and gateway logs across ALL teams. Produces structured Markdown report with per-agent metrics.
+
+```
+python3 /home/node/.openclaw/workspace/the-hive/scripts/hive-health.py \
+  --home /home/node/.openclaw --output HEALTH.md
+```
+
+Flags: STALE (2–5d inactive), DEAD (5d+), NO-RUNBOOK, NO-MEMORY. Reports delivery queue status,
+recent errors, config changes. Mhive runs this every other day (HEARTBEAT.md Priority 0).
+
+### Mhive authority model
+
+**Can do directly (no MM approval):**
+- Swap agent models (following HEURISTICS.md)
+- Fix/rewrite RUNBOOKs, clean corrupt memory files
+- Enable/disable heartbeats, adjust cron schedules
+- Diagnose and fix broken agent sessions
+
+**Requires MM approval (via `workspace/RESTRUCTURE.md`):**
+- Removing an agent entirely
+- Replacing an agent with a cron job/script
+- Adding a new agent
+- Changing pipeline structure
+- Cost changes >$1/day
+
+### Workspace files updated (Layer 2 — deployed to VPS + staging)
+
+| File | Change |
+|------|--------|
+| `HEARTBEAT.md` | Priority 0: health review every other day |
+| `SOUL.md` | Lifecycle v2026-03-14: role audit + health monitoring steps |
+| `MEMORY.md` | 3 lessons: not every role needs an agent, model churn corrupts memory, health monitoring is mhive's job |
+| `HEURISTICS.md` | 2 anti-patterns: agent for a script job, model churn without memory cleanup |
+| `SCORECARD-TEMPLATE.md` | Role audit pre-bootstrap gate, health monitoring ongoing section |
+| `AGENTS.md` | Bootstrap checklist: role audit (#1) + health monitoring (#9) |
+| `TOOLS.md` | Health script documentation |
+| `RESTRUCTURE.md` | New — structural change proposal template |
+
+### Key insight from Scout diagnosis
+
+Scout (market scanner) was an LLM agent wrapping a deterministic script. 3+ weeks broken due to
+model churn corrupting memory, weak models hallucinating data. **Rule: before assigning Tier 1,
+ask "Does this need an LLM at all?" If run-script→filter→forward with no judgment, use a cron job.**
 
 ---
 
