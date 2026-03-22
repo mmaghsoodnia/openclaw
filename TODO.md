@@ -30,7 +30,7 @@
 - **VPS Docker Compose:** `/root/openclaw/docker-compose.yml` + `docker-compose.override.yml` (mounts gog binary + config)
 - **VPS OpenClaw State:** `/root/.openclaw/`
 - **Agents config:** `/root/.openclaw/openclaw.json`
-- **Telegram Bots:** mhive (@mm11homebot), percy (@mhivepolybot), bookworm (@mmhivepublisherbot)
+- **Telegram Bots:** mhivemain (@mhivemainbot), mhivepoly (@mhivepolybot), mhivebook (@mhivebookbot), mhivebrand (@mhivebrand, disabled)
 - **1Password vault:** "OpenClaw" on `my.1password.com`
 - **1Password on VPS:** Service account token at `/root/.op-service-account-token`, loaded via `.bashrc` and `.profile`
 - **Google Workspace:** `mhive@bigbraincap.com` via `gog` CLI (file keyring, password from 1Password)

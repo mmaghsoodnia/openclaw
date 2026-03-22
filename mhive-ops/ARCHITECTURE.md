@@ -168,19 +168,20 @@ agents      — agent defaults (model, fallback chain); agent IDs are directory 
               under /root/.openclaw/workspace/
 tools       — tool enable/disable config
 bindings    — which agent handles which Telegram account
-             (e.g. agentId:"main" → accountId:"mhive")
+             (e.g. agentId:"main" → accountId:"mhivemain")
 messages    — message delivery config
 channels    — channel config (currently: telegram only)
-             channels.telegram.accounts.{mhive,percy,bookworm} — bot tokens + allowlists
+             channels.telegram.accounts.{mhivemain,mhivepoly,mhivebook,mhivebrand} — bot tokens + allowlists
 talk        — TTS config (talk.apiKey uses ${ELEVENLABS_API_KEY} from env)
 gateway     — HTTP port, auth
 skills      — skill paths
 plugins     — plugin config
 ```
 
-**Telegram bot tokens** are hardcoded in `openclaw.json` (in the channels config).
-They are less sensitive (bot-only, not account credentials) but should eventually be
-templated via 1Password.
+**Telegram bot tokens** use `${VAR}` env var refs in `openclaw.json`, injected from
+1Password via the same `op inject` pipeline as LLM API keys. Env vars:
+`TELEGRAM_MHIVEMAIN_BOT_TOKEN`, `TELEGRAM_MHIVEPOLY_BOT_TOKEN`,
+`TELEGRAM_MHIVEBOOK_BOT_TOKEN`, `TELEGRAM_MHIVEBRAND_BOT_TOKEN`.
 
 ---
 
@@ -310,9 +311,10 @@ workspace/
 
 Telegram bindings (from `openclaw.json`):
 
-- `@mhive bot` → `agentId: main` (mhive, chief of staff)
-- `@percy bot` → `agentId: hive-pm` (PolyHive PM)
-- `@bookworm bot` → `agentId: book-pm` (BookHive PM)
+- `@mhivemainbot` → `agentId: main` (mhive, chief of staff) — account: `mhivemain`
+- `@mhivepolybot` → `agentId: hive-pm` (PolyHive PM) — account: `mhivepoly`
+- `@mhivebookbot` → `agentId: book-pm` (BookHive PM) — account: `mhivebook`
+- `@mhivebrand` → unbound (brand bot, disabled) — account: `mhivebrand`
 
 ---
 

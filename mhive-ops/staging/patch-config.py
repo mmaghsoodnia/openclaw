@@ -3,7 +3,7 @@
 Patches a synced openclaw.json for local staging use.
 
 Expected env vars (injected by `op run`):
-  STAGING_TELEGRAM_BOT_TOKEN  — bot token for staging Telegram bot
+  TELEGRAM_MHIVESTAGE_BOT_TOKEN  — bot token for staging Telegram bot
   STAGING_GATEWAY_TOKEN       — gateway auth token (optional override)
 
 Usage:
@@ -21,11 +21,11 @@ def main():
     config_path = sys.argv[1]
 
     # Read env vars
-    staging_bot_token = os.environ.get("STAGING_TELEGRAM_BOT_TOKEN", "")
+    staging_bot_token = os.environ.get("TELEGRAM_MHIVESTAGE_BOT_TOKEN", "")
     staging_gw_token = os.environ.get("STAGING_GATEWAY_TOKEN", "")
 
     if not staging_bot_token:
-        print("WARNING: STAGING_TELEGRAM_BOT_TOKEN not set — Telegram will not work", file=sys.stderr)
+        print("WARNING: TELEGRAM_MHIVESTAGE_BOT_TOKEN not set — Telegram will not work", file=sys.stderr)
 
     # Load config
     with open(config_path, "r") as f:
@@ -40,7 +40,7 @@ def main():
     allow_from = prod_mhive.get("allowFrom", ["217834570"])
 
     telegram["accounts"] = {
-        "staging": {
+        "mhivestage": {
             "dmPolicy": "allowlist",
             "botToken": staging_bot_token,
             "allowFrom": allow_from,
@@ -54,7 +54,7 @@ def main():
             "agentId": "main",
             "match": {
                 "channel": "telegram",
-                "accountId": "staging",
+                "accountId": "mhivestage",
             }
         }
     ]
@@ -89,7 +89,7 @@ def main():
         json.dump(cfg, f, indent=2)
 
     print(f"OK: Patched {config_path} for staging")
-    print(f"  - Telegram: 1 account (staging), allowFrom={allow_from}")
+    print(f"  - Telegram: 1 account (mhivestage), allowFrom={allow_from}")
     print(f"  - WhatsApp: disabled")
     print(f"  - Gateway bind: via CLI --bind flag (OPENCLAW_GATEWAY_BIND env var)")
     if staging_gw_token:

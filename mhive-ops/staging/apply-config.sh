@@ -17,7 +17,7 @@ echo "Patching $CONFIG for staging..."
 # Use op run to inject secrets as env vars, then call patch-config.py
 op run --account my.1password.com \
   --env-file <(cat <<'OPENV'
-STAGING_TELEGRAM_BOT_TOKEN=op://OpenClaw/Staging Telegram Bot/credential
+TELEGRAM_MHIVESTAGE_BOT_TOKEN=op://OpenClaw/Telegram Bot mhivestagebot/credential
 STAGING_GATEWAY_TOKEN=op://OpenClaw/Staging Gateway Token/credential
 OPENV
 ) -- python3 "$SCRIPT_DIR/patch-config.py" "$CONFIG"

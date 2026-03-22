@@ -27,6 +27,12 @@ GROQ_API_KEY={{ op://OpenClaw/Groq API Key/credential }}
 BRAVE_API_KEY={{ op://OpenClaw/Brave API Key/credential }}
 ELEVENLABS_API_KEY={{ op://OpenClaw/ElevenLabs Talk API Key/credential }}
 
+# --- Telegram Bot Tokens ---
+TELEGRAM_MHIVEMAIN_BOT_TOKEN={{ op://OpenClaw/Telegram Bot mhivemainbot/credential }}
+TELEGRAM_MHIVEPOLY_BOT_TOKEN={{ op://OpenClaw/Telegram Bot mhivepolybot/credential }}
+TELEGRAM_MHIVEBOOK_BOT_TOKEN={{ op://OpenClaw/Telegram Bot mhivebookbot/credential }}
+TELEGRAM_MHIVEBRAND_BOT_TOKEN={{ op://OpenClaw/Telegram bot mhivebrand/credential }}
+
 # --- Google Workspace (gog) ---
 GOG_KEYRING_PASSWORD={{ op://OpenClaw/GOG Keyring Password/password }}
 GOG_ACCOUNT=mhive@bigbraincap.com

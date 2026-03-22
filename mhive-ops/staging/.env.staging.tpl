@@ -15,3 +15,6 @@ DEEPSEEK_API_KEY={{ op://OpenClaw/DeepSeek API Key/credential }}
 GROQ_API_KEY={{ op://OpenClaw/Groq API Key/credential }}
 BRAVE_API_KEY={{ op://OpenClaw/Brave API Key/credential }}
 ELEVENLABS_API_KEY={{ op://OpenClaw/ElevenLabs Talk API Key/credential }}
+
+# --- Telegram Bot Token ---
+TELEGRAM_MHIVESTAGE_BOT_TOKEN={{ op://OpenClaw/Telegram Bot mhivestagebot/credential }}
