@@ -235,6 +235,17 @@ resolves the API key in this order:
 3. Add env var to `docker-compose.override.yml` (VPS) and `docker-compose.staging.yml`
 4. Re-run `op inject -f` and `docker compose up -d`
 
+### Docker volume mounts (VPS `docker-compose.override.yml`)
+
+| Host path                          | Container path              | Mode | Purpose                                |
+| ---------------------------------- | --------------------------- | ---- | -------------------------------------- |
+| `/usr/local/bin/gog`               | `/usr/local/bin/gog`        | ro   | gog CLI binary                         |
+| `/root/.config/gogcli`             | `/home/node/.config/gogcli` | ro   | gog OAuth credentials + keyring        |
+| `/root/Projects/llm-bench/results` | `/data/llm-bench-results`   | ro   | LLM benchmark results (read by agents) |
+
+The default `docker-compose.yml` also mounts `/root/.openclaw` (config + workspace) via
+the `OPENCLAW_CONFIG_DIR` env var. Volumes above are **additional** mounts from the override.
+
 ### Google Workspace (gog) credentials
 
 gog requires three credential files inside the Docker container at `/home/node/.config/gogcli/`:
