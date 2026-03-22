@@ -65,6 +65,14 @@ const MEMORY_FILE_NAMES = [DEFAULT_MEMORY_FILENAME, DEFAULT_MEMORY_ALT_FILENAME]
 
 const ALLOWED_FILE_NAMES = new Set<string>([...BOOTSTRAP_FILE_NAMES, ...MEMORY_FILE_NAMES]);
 
+/** Accept standard allowlist files and any .md file without path separators. */
+function isAllowedWorkspaceFileName(name: string): boolean {
+  if (ALLOWED_FILE_NAMES.has(name)) {
+    return true;
+  }
+  return /^[\w][\w.-]*\.md$/i.test(name) && !name.includes("/") && !name.includes("\\");
+}
+
 function resolveAgentWorkspaceFileOrRespondError(
   params: Record<string, unknown>,
   respond: RespondFn,
@@ -88,7 +96,7 @@ function resolveAgentWorkspaceFileOrRespondError(
   const name = (
     typeof rawName === "string" || typeof rawName === "number" ? String(rawName) : ""
   ).trim();
-  if (!ALLOWED_FILE_NAMES.has(name)) {
+  if (!isAllowedWorkspaceFileName(name)) {
     respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, `unsupported file "${name}"`));
     return null;
   }
@@ -343,6 +351,37 @@ async function listAgentFiles(workspaceDir: string, options?: { hideBootstrap?: 
         missing: true,
       });
     }
+  }
+
+  // Scan workspace dir for additional .md files not in the standard set.
+  const standardNames = new Set<string>([...BOOTSTRAP_FILE_NAMES, ...MEMORY_FILE_NAMES]);
+  try {
+    const entries = await fs.readdir(workspaceDir);
+    for (const entry of entries) {
+      if (
+        !standardNames.has(entry) &&
+        isAllowedWorkspaceFileName(entry) &&
+        !files.some((f) => f.name === entry)
+      ) {
+        const resolved = await resolveAgentWorkspaceFilePath({
+          workspaceDir,
+          name: entry,
+          allowMissing: true,
+        });
+        const meta = resolved.kind === "ready" ? await statFileSafely(resolved.ioPath) : null;
+        if (meta) {
+          files.push({
+            name: entry,
+            path: resolved.requestPath,
+            missing: false,
+            size: meta.size,
+            updatedAtMs: meta.updatedAtMs,
+          });
+        }
+      }
+    }
+  } catch {
+    // Workspace dir may not exist yet — ignore.
   }
 
   return files;

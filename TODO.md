@@ -77,7 +77,7 @@
 - [x] **Fix bookworm Telegram group** — Book PM bot not responding in "Book group". Root cause: mhive added group chat ID (`-5119732747`) to `allowFrom` instead of `groups` config. `allowFrom` only accepts user IDs — group IDs are silently rejected. Also needed `requireMention: false`. Fixed config, documented in mhive's TOOLS.md for future reference. _(2026-03-17)_
 - [x] **LLM benchmark framework + model matrix** — Built benchmark tool (8 models x 3 prompts = 24 tests). Scored quality: Claude Sonnet 4.6 (4.7/5), Grok Fast (3.0/5), Gemini Flash (1.3/5). Rolled back VPS from DeepSeek (cascading timeouts) to stable US models. Split benchmark into standalone project at `~/Projects/llm-bench/` (separate agent manages it). _(2026-03-13 — 2026-03-20)_
 - [x] **Add Groq API key to all environments** — Added `GROQ_API_KEY` to `.env.vps.tpl`, `.env.staging.tpl`, `docker-compose.staging.yml`, and VPS `docker-compose.override.yml`. Also backfilled `VENICE_API_KEY` and `DEEPSEEK_API_KEY` that were missing from staging config. Verified key live in VPS container. _(2026-03-22)_
-- [x] **Mhive OS v2 — Fractal operating system overhaul** — Redesigned mhive from IT ops manager to operator of operators. Fractal model: same OS at two levels (PMs operate teams, mhive operates PMs). Installed PM OS into Percy and Book PM (SCORECARD.md, OPEN.md, BACKLOG.md, enhanced MORNING_PROTOCOL). Rewrote mhive SOUL.md (capital allocator identity), HEARTBEAT.md (verify/pulse/review cadence), trimmed MEMORY.md. Created VERIFICATION-MAP.md for ground truth cross-referencing. Created reusable PM OS templates (`templates/pm-os/`). Added team-building playbook to HEURISTICS.md. Backup at `/root/workspace-backup-2026-03-22.tar.gz`. Week 4 decision point: 2026-04-19. _(2026-03-22)_
+- [x] **Mhive OS v2 — Fractal operating system overhaul** — Redesigned mhive from IT ops manager to operator of operators. Fractal model: same OS at two levels (PMs operate teams, mhive operates PMs). Installed PM OS into Percy and Book PM (SCORECARD.md, OPEN.md, BACKLOG.md, enhanced MORNING*PROTOCOL). Rewrote mhive SOUL.md (capital allocator identity), HEARTBEAT.md (verify/pulse/review cadence), trimmed MEMORY.md. Created VERIFICATION-MAP.md for ground truth cross-referencing. Created reusable PM OS templates (`templates/pm-os/`). Added team-building playbook to HEURISTICS.md. Backup at `/root/workspace-backup-2026-03-22.tar.gz`. Week 4 decision point: 2026-04-19. *(2026-03-22)\_
 
 ---
 
@@ -97,7 +97,7 @@
   - Verified `setup-gog.sh` can reconstruct the full gogcli directory from 1Password.
   - Staging gog tested end-to-end: Gmail, Calendar, Drive all working from inside Docker container.
 
-- [ ] **Set up staging on Mac Studio** — `[Layer 1 — Operator]` *(Assigned to Mac Studio Claude)*
+- [ ] **Set up staging on Mac Studio** — `[Layer 1 — Operator]` _(Assigned to Mac Studio Claude)_
   - Mac Studio does not have a local staging environment yet. Only the Mac (current dev machine) has one.
   - Replicate the setup from `mhive-ops/staging/` scripts. Needs Docker Desktop, 1Password service account token at `~/.op-service-account-token`, and a linux/arm64 gog binary at `~/.openclaw-staging/bin/gog`.
   - See `mhive-ops/sessions/2026-02-25.md` (staging setup) and `2026-03-03.md` (gog binary fix) for reference.

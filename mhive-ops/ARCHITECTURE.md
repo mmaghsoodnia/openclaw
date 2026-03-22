@@ -419,11 +419,11 @@ the patch and confirm back via Telegram. To resume: _"Resume normal operations"_
 Model assignments are in `openclaw.json` under `agents.list[].model` and `agents.defaults.model`.
 The gateway hot-reloads config changes — no restart needed.
 
-| Category    | Agents                                                               | Primary                     | Why                                    |
-| ----------- | -------------------------------------------------------------------- | --------------------------- | -------------------------------------- |
-| Planners    | mhive, hive-pm, hive-risk, book-pm                                  | anthropic/claude-sonnet-4-6 | Quality critical (4.7/5), $0.12/call   |
-| Researchers | scout, analyst, contrarian, quant, auditor, book-researcher, etc.    | xai/grok-4-1-fast           | Best value (3.0/5), $0.003/call, 22s   |
-| Doers       | hive-trader, book-publisher                                          | xai/grok-4-1-fast           | Speed + value, same as researchers     |
+| Category    | Agents                                                            | Primary                     | Why                                  |
+| ----------- | ----------------------------------------------------------------- | --------------------------- | ------------------------------------ |
+| Planners    | mhive, hive-pm, hive-risk, book-pm                                | anthropic/claude-sonnet-4-6 | Quality critical (4.7/5), $0.12/call |
+| Researchers | scout, analyst, contrarian, quant, auditor, book-researcher, etc. | xai/grok-4-1-fast           | Best value (3.0/5), $0.003/call, 22s |
+| Doers       | hive-trader, book-publisher                                       | xai/grok-4-1-fast           | Speed + value, same as researchers   |
 
 All agents have fallback chains: primary → fallback 1 → fallback 2. See `openclaw.json` for exact chains.
 
@@ -455,12 +455,14 @@ recent errors, config changes. Mhive runs this every other day (HEARTBEAT.md Pri
 ### Mhive authority model
 
 **Can do directly (no MM approval):**
+
 - Swap agent models (following HEURISTICS.md)
 - Fix/rewrite RUNBOOKs, clean corrupt memory files
 - Enable/disable heartbeats, adjust cron schedules
 - Diagnose and fix broken agent sessions
 
 **Requires MM approval (via `workspace/RESTRUCTURE.md`):**
+
 - Removing an agent entirely
 - Replacing an agent with a cron job/script
 - Adding a new agent
@@ -469,16 +471,16 @@ recent errors, config changes. Mhive runs this every other day (HEARTBEAT.md Pri
 
 ### Workspace files updated (Layer 2 — deployed to VPS + staging)
 
-| File | Change |
-|------|--------|
-| `HEARTBEAT.md` | Priority 0: health review every other day |
-| `SOUL.md` | Lifecycle v2026-03-14: role audit + health monitoring steps |
-| `MEMORY.md` | 3 lessons: not every role needs an agent, model churn corrupts memory, health monitoring is mhive's job |
-| `HEURISTICS.md` | 2 anti-patterns: agent for a script job, model churn without memory cleanup |
-| `SCORECARD-TEMPLATE.md` | Role audit pre-bootstrap gate, health monitoring ongoing section |
-| `AGENTS.md` | Bootstrap checklist: role audit (#1) + health monitoring (#9) |
-| `TOOLS.md` | Health script documentation |
-| `RESTRUCTURE.md` | New — structural change proposal template |
+| File                    | Change                                                                                                  |
+| ----------------------- | ------------------------------------------------------------------------------------------------------- |
+| `HEARTBEAT.md`          | Priority 0: health review every other day                                                               |
+| `SOUL.md`               | Lifecycle v2026-03-14: role audit + health monitoring steps                                             |
+| `MEMORY.md`             | 3 lessons: not every role needs an agent, model churn corrupts memory, health monitoring is mhive's job |
+| `HEURISTICS.md`         | 2 anti-patterns: agent for a script job, model churn without memory cleanup                             |
+| `SCORECARD-TEMPLATE.md` | Role audit pre-bootstrap gate, health monitoring ongoing section                                        |
+| `AGENTS.md`             | Bootstrap checklist: role audit (#1) + health monitoring (#9)                                           |
+| `TOOLS.md`              | Health script documentation                                                                             |
+| `RESTRUCTURE.md`        | New — structural change proposal template                                                               |
 
 ### Key insight from Scout diagnosis
 
@@ -495,6 +497,7 @@ The agent system now runs a two-level fractal operating system:
 ### Level 1: PM Operating System (Percy, Book PM)
 
 Each PM is an operator of their team. They maintain:
+
 - `{pm}/SCORECARD.md` — Live KPIs, updated daily as Step 1 of morning protocol
 - `{pm}/OPEN.md` — Active fixes + experiments (hypothesis → metric → deadline)
 - `{pm}/BACKLOG.md` — Prioritized improvement ideas (Impact × Confidence ÷ Effort)
@@ -505,6 +508,7 @@ PMs coach their agents, run experiments, and escalate to mhive after 2 failed at
 ### Level 2: Mhive Meta-Operating System
 
 Mhive is the operator of operators. Core responsibilities:
+
 - **Verify** PM scorecards against ground truth (`VERIFICATION-MAP.md`)
 - **Grade** PMs weekly on output AND accuracy (lower of two = overall grade)
 - **Allocate** token budget per team based on verified results
@@ -513,14 +517,14 @@ Mhive is the operator of operators. Core responsibilities:
 
 ### Key Files
 
-| File | Location | Owner | Purpose |
-|------|----------|-------|---------|
-| `VERIFICATION-MAP.md` | workspace root | Mhive | Ground truth sources per metric |
-| `WEEKLY-REVIEW.md` | workspace root | Mhive | Friday review (written weekly) |
-| `templates/pm-os/` | workspace dir | Mhive | Reusable PM OS templates for new teams |
-| `{pm}/SCORECARD.md` | per-PM dir | PM | Live KPIs |
-| `{pm}/OPEN.md` | per-PM dir | PM | Experiments + fixes |
-| `{pm}/BACKLOG.md` | per-PM dir | PM | Improvement ideas |
+| File                  | Location       | Owner | Purpose                                |
+| --------------------- | -------------- | ----- | -------------------------------------- |
+| `VERIFICATION-MAP.md` | workspace root | Mhive | Ground truth sources per metric        |
+| `WEEKLY-REVIEW.md`    | workspace root | Mhive | Friday review (written weekly)         |
+| `templates/pm-os/`    | workspace dir  | Mhive | Reusable PM OS templates for new teams |
+| `{pm}/SCORECARD.md`   | per-PM dir     | PM    | Live KPIs                              |
+| `{pm}/OPEN.md`        | per-PM dir     | PM    | Experiments + fixes                    |
+| `{pm}/BACKLOG.md`     | per-PM dir     | PM    | Improvement ideas                      |
 
 ### Rollback
 
