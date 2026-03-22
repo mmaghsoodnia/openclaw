@@ -335,6 +335,11 @@ VPS (root@100.71.224.113, /root/openclaw/)
 The VPS pulls from **our fork** (`mmaghsoodnia/openclaw`), never from upstream. Upstream
 changes must be deliberately merged into our fork first and reviewed.
 
+**Last upstream merge:** 2026-03-22 (1,329 commits, fork commit `f832d0b48f`). Key upstream
+changes: per-agent defaults (#51974 — optional `thinkingDefault`/`reasoningDefault`/`fastModeDefault`),
+Discord message dedup, startup perf, plugin resolver cache fix. Our plugin runtime fix
+(`plugins/runtime/index` build entry) is now upstream natively.
+
 ---
 
 ## VPS Security Hardening (2026-03-10)
