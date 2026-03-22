@@ -213,11 +213,12 @@ resolves the API key in this order:
 3. **Config `apiKey`** — `models.providers[provider].apiKey` in `openclaw.json`
    (uses `${VAR}` env var substitution, not hardcoded values)
 
-### Current state (as of 2026-02-27)
+### Current state (as of 2026-03-22)
 
 - **Docker env vars** (injected from 1Password via `mhive-ops/.env.vps.tpl`):
   `OPENAI_API_KEY`, `XAI_API_KEY`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`,
-  `MAPLE_API_KEY`, `BRAVE_API_KEY`, `ELEVENLABS_API_KEY`
+  `MAPLE_API_KEY`, `VENICE_API_KEY`, `DEEPSEEK_API_KEY`, `GROQ_API_KEY`,
+  `BRAVE_API_KEY`, `ELEVENLABS_API_KEY`
 - **Per-agent auth-profiles.json** are empty — all agents use env var fallback
 - **`openclaw.json`** uses `${VAR}` references for `models.providers.maple.apiKey`
   and `talk.apiKey` — resolved from env at config load time
