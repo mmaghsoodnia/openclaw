@@ -375,6 +375,71 @@ Four layers of inbound protection, all active:
 
 ---
 
+## Outbound Traffic Security Assessment (2026-03-25)
+
+The four layers above cover **inbound** protection. This section documents the assessment of
+whether outbound traffic needs an additional privacy/security layer (VPN, Tor, proxy).
+
+**Conclusion: not needed.** The current architecture is sufficient.
+
+### Current outbound posture
+
+All outbound connections from the VPS (API calls, Telegram, Google, GitHub, 1Password) use
+HTTPS/TLS. Content is encrypted in transit. Hostinger/ISP can see destination IPs and traffic
+volume but not request/response content.
+
+### Identity binding makes IP anonymity ineffective
+
+Every external service the VPS talks to identifies the caller by credential, not by IP:
+
+| Service           | Identity mechanism                | IP-based tracking? |
+| ----------------- | --------------------------------- | ------------------ |
+| Anthropic, OpenAI | API key in `Authorization` header | No                 |
+| xAI, Gemini, Groq | API key in `Authorization` header | No                 |
+| Telegram          | Bot token in URL path             | No                 |
+| Google Workspace  | OAuth refresh token               | No                 |
+| 1Password         | Service account token             | No                 |
+| GitHub            | SSH key / PAT                     | No                 |
+
+A VPN would hide the VPS IP from these services, but the API key already tells them exactly
+who is calling. Changing the source IP provides no additional privacy.
+
+### VPN trade-off
+
+A VPN shifts trust from Hostinger/ISP to the VPN provider — it does not eliminate trust.
+The VPN provider can see all destination IPs and traffic patterns (same visibility the ISP
+currently has). Additional downsides: latency increase on every API call, new single point
+of failure, monthly cost, and operational complexity (key rotation, reconnect logic).
+
+### Tor assessment
+
+Tor is unsuitable for this system:
+
+- **Latency:** 2-10x slower per request — unacceptable for agent responsiveness
+- **Telegram:** Long-polling breaks on Tor; many exit nodes are blocked
+- **API providers:** Most block or rate-limit Tor exit nodes
+- **Reliability:** Exit node churn causes connection drops — bad for 24/7 agent system
+
+### When to revisit
+
+If agents begin heavy **web scraping or public browsing** (via `web_fetch`/`browser` tools)
+where hiding the VPS IP from target websites matters (anti-blocking, anti-fingerprinting),
+consider adding a lightweight outbound SOCKS proxy or rotating residential proxy for those
+specific tool calls only — not system-wide. This is not needed with current usage patterns.
+
+### Real attack surfaces (where to focus instead)
+
+| Surface                  | Current mitigation                        | Status |
+| ------------------------ | ----------------------------------------- | ------ |
+| Secrets in context       | 1Password injection, never in prompts     | Good   |
+| Agent prompt injection   | Tool approval system, allowlists          | Good   |
+| SSH/management access    | Tailscale-only, key auth, fail2ban        | Good   |
+| Container isolation      | Docker, restricted DOCKER-USER chain      | Good   |
+| Outbound content privacy | HTTPS/TLS on all connections              | Good   |
+| Outbound IP anonymity    | Not needed — identity is credential-bound | N/A    |
+
+---
+
 ## Agent Workspace Sync
 
 Before testing anything on staging, **always sync the agent workspace from VPS**:
