@@ -32,6 +32,7 @@ TELEGRAM_MHIVEMAIN_BOT_TOKEN={{ op://OpenClaw/Telegram Bot mhivemainbot/credenti
 TELEGRAM_MHIVEPOLY_BOT_TOKEN={{ op://OpenClaw/Telegram Bot mhivepolybot/credential }}
 TELEGRAM_MHIVEBOOK_BOT_TOKEN={{ op://OpenClaw/Telegram Bot mhivebookbot/credential }}
 TELEGRAM_MHIVEBRAND_BOT_TOKEN={{ op://OpenClaw/Telegram bot mhivebrand/credential }}
+TELEGRAM_MHIVEDOOST_BOT_TOKEN={{ op://OpenClaw/Telegram Bot mhivedoostbot/credential }}
 
 # --- Google Workspace (gog) ---
 GOG_KEYRING_PASSWORD={{ op://OpenClaw/GOG Keyring Password/password }}
