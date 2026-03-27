@@ -237,11 +237,12 @@ resolves the API key in this order:
 
 ### Docker volume mounts (VPS `docker-compose.override.yml`)
 
-| Host path                          | Container path              | Mode | Purpose                                |
-| ---------------------------------- | --------------------------- | ---- | -------------------------------------- |
-| `/usr/local/bin/gog`               | `/usr/local/bin/gog`        | ro   | gog CLI binary                         |
-| `/root/.config/gogcli`             | `/home/node/.config/gogcli` | ro   | gog OAuth credentials + keyring        |
-| `/root/Projects/llm-bench/results` | `/data/llm-bench-results`   | ro   | LLM benchmark results (read by agents) |
+| Host path                          | Container path              | Mode | Purpose                                    |
+| ---------------------------------- | --------------------------- | ---- | ------------------------------------------ |
+| `/usr/local/bin/gog`               | `/usr/local/bin/gog`        | ro   | gog CLI binary (source-built, linux/amd64) |
+| `/root/.config/gogcli`             | `/home/node/.config/gogcli` | ro   | gog OAuth credentials + keyring            |
+| `/root/gog-mcp`                    | `/home/node/gog-mcp`        | ro   | gog MCP server (Node.js)                   |
+| `/root/Projects/llm-bench/results` | `/data/llm-bench-results`   | ro   | LLM benchmark results (read by agents)     |
 
 The default `docker-compose.yml` also mounts `/root/.openclaw` (config + workspace) via
 the `OPENCLAW_CONFIG_DIR` env var. Volumes above are **additional** mounts from the override.
@@ -269,6 +270,46 @@ The keyring password is injected as an env var from `.env.vps.tpl`.
 4. The keyring password comes via `.env.staging` (same as other env vars)
 
 Both `start.sh` and `rebuild.sh` call `setup-gog.sh` automatically.
+
+### Google Workspace MCP server (gog-mcp)
+
+As of 2026-03-27, agents access Google Workspace via a dedicated **MCP server** (`gog-mcp`)
+instead of the old Lobster plugin subprocess approach. The MCP server provides 30+ structured
+tools (Gmail, Calendar, Drive, Docs with rich formatting, Sheets, Contacts).
+
+**Source:** `~/Projects/gog/` (private repo `mmaghsoodnia/gog-mcp`). Uses a source-built
+`gogcli` binary from `~/Projects/gogcli/` (upstream: `steipete/gogcli`, MIT license).
+
+**Registration in `openclaw.json`:**
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "gog": {
+        "command": "node",
+        "args": ["/home/node/gog-mcp/dist/index.js"],
+        "env": {
+          "GOG_PATH": "/usr/local/bin/gog",
+          "GOG_ACCOUNT": "mhive@bigbraincap.com",
+          "GOG_KEYRING_PASSWORD": "${GOG_KEYRING_PASSWORD}"
+        }
+      }
+    }
+  }
+}
+```
+
+The MCP server is spawned lazily by the gateway on first tool call. It shells out to the
+`gog` CLI binary for each operation. Secrets (`GOG_KEYRING_PASSWORD`) flow from `.env` →
+Docker env → `openclaw.json` `${VAR}` resolution → MCP server env.
+
+**Redeployment** (after changes to gog-mcp or gogcli):
+
+1. Cross-compile gogcli: `cd ~/Projects/gogcli && GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o gog-linux-amd64 ./cmd/gog/`
+2. Package gog-mcp: `cd ~/Projects/gog && tar czf /tmp/gog-mcp.tar.gz dist/ node_modules/ package.json`
+3. Upload: `scp` binary to `/usr/local/bin/gog`, tarball to `/root/`, extract to `/root/gog-mcp/`
+4. Restart gateway: `docker compose up -d openclaw-gateway`
 
 ### Deploying to a new environment
 
