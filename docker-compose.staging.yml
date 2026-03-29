@@ -15,6 +15,7 @@ services:
         fi
         exec node dist/index.js gateway --bind $${OPENCLAW_GATEWAY_BIND:-lan} --port 18789
     environment:
+      OPENCLAW_BUNDLED_PLUGINS_DIR: /app/dist/extensions
       GOG_KEYRING_PASSWORD: ${GOG_KEYRING_PASSWORD}
       GOG_ACCOUNT: ${GOG_ACCOUNT:-mhive@bigbraincap.com}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
