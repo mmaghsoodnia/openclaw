@@ -31,8 +31,9 @@ ELEVENLABS_API_KEY={{ op://OpenClaw/ElevenLabs Talk API Key/credential }}
 TELEGRAM_MHIVEMAIN_BOT_TOKEN={{ op://OpenClaw/Telegram Bot mhivemainbot/credential }}
 TELEGRAM_MHIVEPOLY_BOT_TOKEN={{ op://OpenClaw/Telegram Bot mhivepolybot/credential }}
 TELEGRAM_MHIVEBOOK_BOT_TOKEN={{ op://OpenClaw/Telegram Bot mhivebookbot/credential }}
-TELEGRAM_MHIVEBRAND_BOT_TOKEN={{ op://OpenClaw/Telegram bot mhivebrand/credential }}
+TELEGRAM_MHIVEBRAND_BOT_TOKEN={{ op://OpenClaw/Telegram Bot mhivebrandbot/credential }}
 TELEGRAM_MHIVEDOOST_BOT_TOKEN={{ op://OpenClaw/Telegram Bot mhivedoostbot/credential }}
+TELEGRAM_MHIVERESEARCH_BOT_TOKEN={{ op://OpenClaw/Telegram Bot mhiveresearchbot/credential }}
 
 # --- Google Workspace (gog) ---
 GOG_KEYRING_PASSWORD={{ op://OpenClaw/GOG Keyring Password/password }}

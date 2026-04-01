@@ -171,7 +171,7 @@ bindings    — which agent handles which Telegram account
              (e.g. agentId:"main" → accountId:"mhivemain")
 messages    — message delivery config
 channels    — channel config (currently: telegram only)
-             channels.telegram.accounts.{mhivemain,mhivepoly,mhivebook,mhivebrand} — bot tokens + allowlists
+             channels.telegram.accounts.{mhivemain,mhivepoly,mhivebook,mhivebrand,mhivedoost,mhiveresearch} — bot tokens + allowlists
 talk        — TTS config (talk.apiKey uses ${ELEVENLABS_API_KEY} from env)
 gateway     — HTTP port, auth
 skills      — skill paths
@@ -181,7 +181,8 @@ plugins     — plugin config
 **Telegram bot tokens** use `${VAR}` env var refs in `openclaw.json`, injected from
 1Password via the same `op inject` pipeline as LLM API keys. Env vars:
 `TELEGRAM_MHIVEMAIN_BOT_TOKEN`, `TELEGRAM_MHIVEPOLY_BOT_TOKEN`,
-`TELEGRAM_MHIVEBOOK_BOT_TOKEN`, `TELEGRAM_MHIVEBRAND_BOT_TOKEN`.
+`TELEGRAM_MHIVEBOOK_BOT_TOKEN`, `TELEGRAM_MHIVEBRAND_BOT_TOKEN`,
+`TELEGRAM_MHIVEDOOST_BOT_TOKEN`, `TELEGRAM_MHIVERESEARCH_BOT_TOKEN`.
 
 ---
 
@@ -366,7 +367,9 @@ Telegram bindings (from `openclaw.json`):
 - `@mhivemainbot` → `agentId: main` (mhive, chief of staff) — account: `mhivemain`
 - `@mhivepolybot` → `agentId: hive-pm` (PolyHive PM) — account: `mhivepoly`
 - `@mhivebookbot` → `agentId: book-pm` (BookHive PM) — account: `mhivebook`
-- `@mhivebrand` → unbound (brand bot, disabled) — account: `mhivebrand`
+- `@mhivebrandbot` → unbound (brand bot, disabled) — account: `mhivebrand`
+- `@mhivedoostbot` → `agentId: doost` — account: `mhivedoost`
+- `@mhiveresearchbot` → `agentId: researcher` (Vega, Research) — account: `mhiveresearch`
 
 ---
 
@@ -611,6 +614,17 @@ recent errors, config changes. Mhive runs this every other day (HEARTBEAT.md Pri
 Scout (market scanner) was an LLM agent wrapping a deterministic script. 3+ weeks broken due to
 model churn corrupting memory, weak models hallucinating data. **Rule: before assigning Tier 1,
 ask "Does this need an LLM at all?" If run-script→filter→forward with no judgment, use a cron job.**
+
+---
+
+## PolyHive Team
+
+Full design: `the-hive/TEAMDESIGN.md` (on VPS at `/home/node/.openclaw/workspace/the-hive/TEAMDESIGN.md`).
+
+Pipeline redesigned 2026-03-29. Root cause of 13-day zero-trade drought: scanner path mismatch.
+New design: deterministic scripts handle all verification; agents provide judgment only (2 LLM calls/day).
+Cron: `scan.py` at 14:00 UTC triggers event-driven chain → analyst → contrarian → sizing → paper trade.
+Health check: `pipeline-health.py` at 17:00 UTC → Percy → mhive Telegram daily.
 
 ---
 
