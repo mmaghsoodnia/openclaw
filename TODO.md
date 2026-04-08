@@ -108,6 +108,28 @@
   - Replicate the setup from `mhive-ops/staging/` scripts. Needs Docker Desktop, 1Password service account token at `~/.op-service-account-token`, and a linux/arm64 gog binary at `~/.openclaw-staging/bin/gog`.
   - See `mhive-ops/sessions/2026-02-25.md` (staging setup) and `2026-03-03.md` (gog binary fix) for reference.
 
+- [ ] **Verify PolyHive pipeline runs automatically (2026-04-06 first test)** — `[Layer 1 — Operator]`
+  - pipeline-runner.py watchdog deployed 2026-04-05. First fully automated cron run should have fired 2026-04-06 at 14:15 UTC.
+  - Check: `ls /root/.openclaw/workspace/the-hive/data/pipeline/2026-04-06/` — should show 5 stage files
+  - Check: `tail -30 /root/.openclaw/logs/pipeline-runner.log` — should show watchdog advancing stages
+  - Check: Percy's 17:00 UTC health report should show current-day stats (not `?`) for first time since 03-29
+
+- [ ] **Verify session memory indexing is active for mhive and Percy** — `[Layer 1 — Operator]`
+  - Enabled 2026-04-08 via `memorySearch.experimental.sessionMemory: true` in openclaw.json
+  - After next mhive or Percy session: check `ls /root/.openclaw/agents/main/` and `ls /root/.openclaw/agents/hive-pm/` for new session export dirs or QMD index files
+  - If indexing works: test with `memory_search` query in a mhive session referencing a past conversation
+
+- [ ] **PolyHive 30-trade interim checkpoint** — `[Layer 2 — Agent]`
+  - At 10 trades currently (6 open, 4 closed). Need 30 closed trades for first statistical checkpoint.
+  - When 30 closed trades exist: run `validate-thesis.py --thesis TH-001` manually and review with mhive
+  - Questions to answer: Does EV predict win rate? Is contrarian calibrated? Is Kelly sizing working?
+  - Decision: continue collecting / refine thesis / pause thesis
+
+- [ ] **Monitor zombie agent exec calls** — `[Layer 2 — Agent]`
+  - At 14:00, 17:00, 22:00 UTC, unidentified agent still calls deprecated scripts (fetch-soccer-markets.py, audit-ledger.py, hive-health.py) via exec — causing denials but not breaking the new pipeline
+  - hive-quant and hive-risk RUNBOOKs updated with CRITICAL NOTEs
+  - Watch gateway logs over next week: if calls continue, the agent's SOUL/MEMORY also needs updating or the agent needs to be disabled entirely
+
 ---
 
 ## Notes
