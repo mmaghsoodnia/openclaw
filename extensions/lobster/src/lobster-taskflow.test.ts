@@ -1,59 +1,59 @@
 import { describe, expect, it, vi } from "vitest";
-import type { OpenClawPluginApi } from "../runtime-api.js";
 import type { LobsterRunner } from "./lobster-runner.js";
 import { resumeManagedLobsterFlow, runManagedLobsterFlow } from "./lobster-taskflow.js";
+import { createFakeTaskFlow } from "./taskflow-test-helpers.js";
 
-type BoundTaskFlow = ReturnType<
-  NonNullable<OpenClawPluginApi["runtime"]>["taskFlow"]["bindSession"]
->;
-
-function createFakeTaskFlow(overrides?: Partial<BoundTaskFlow>) {
-  const baseFlow = {
-    flowId: "flow-1",
-    revision: 1,
-    syncMode: "managed" as const,
-    controllerId: "tests/lobster",
-    ownerKey: "agent:main:main",
-    status: "running" as const,
-    goal: "Run Lobster workflow",
-  };
-
-  const taskFlow: BoundTaskFlow = {
-    sessionKey: "agent:main:main",
-    createManaged: vi.fn().mockReturnValue(baseFlow),
-    get: vi.fn(),
-    list: vi.fn().mockReturnValue([]),
-    findLatest: vi.fn(),
-    resolve: vi.fn(),
-    getTaskSummary: vi.fn(),
-    setWaiting: vi.fn().mockImplementation((input) => ({
-      applied: true,
-      flow: { ...baseFlow, revision: input.expectedRevision + 1, status: "waiting" as const },
-    })),
-    resume: vi.fn().mockImplementation((input) => ({
-      applied: true,
-      flow: { ...baseFlow, revision: input.expectedRevision + 1, status: "running" as const },
-    })),
-    finish: vi.fn().mockImplementation((input) => ({
-      applied: true,
-      flow: { ...baseFlow, revision: input.expectedRevision + 1, status: "completed" as const },
-    })),
-    fail: vi.fn().mockImplementation((input) => ({
-      applied: true,
-      flow: { ...baseFlow, revision: input.expectedRevision + 1, status: "failed" as const },
-    })),
-    requestCancel: vi.fn(),
-    cancel: vi.fn(),
-    runTask: vi.fn(),
-    ...overrides,
-  };
-
-  return taskFlow;
+function expectManagedFlowFailure(
+  result: Awaited<ReturnType<typeof runManagedLobsterFlow | typeof resumeManagedLobsterFlow>>,
+) {
+  expect(result.ok).toBe(false);
+  if (result.ok) {
+    throw new Error("Expected managed Lobster flow to fail");
+  }
+  return result;
 }
-
 function createRunner(result: Awaited<ReturnType<LobsterRunner["run"]>>): LobsterRunner {
   return {
     run: vi.fn().mockResolvedValue(result),
+  };
+}
+
+function createRunFlowParams(
+  taskFlow: ReturnType<typeof createFakeTaskFlow>,
+  runner: LobsterRunner,
+): Parameters<typeof runManagedLobsterFlow>[0] {
+  return {
+    taskFlow,
+    runner,
+    runnerParams: {
+      action: "run",
+      pipeline: "noop",
+      cwd: process.cwd(),
+      timeoutMs: 1000,
+      maxStdoutBytes: 4096,
+    },
+    controllerId: "tests/lobster",
+    goal: "Run Lobster workflow",
+  };
+}
+
+function createResumeFlowParams(
+  taskFlow: ReturnType<typeof createFakeTaskFlow>,
+  runner: LobsterRunner,
+): Parameters<typeof resumeManagedLobsterFlow>[0] {
+  return {
+    taskFlow,
+    runner,
+    flowId: "flow-1",
+    expectedRevision: 4,
+    runnerParams: {
+      action: "resume",
+      token: "resume-1",
+      approve: true,
+      cwd: process.cwd(),
+      timeoutMs: 1000,
+      maxStdoutBytes: 4096,
+    },
   };
 }
 
@@ -67,19 +67,7 @@ describe("runManagedLobsterFlow", () => {
       requiresApproval: null,
     });
 
-    const result = await runManagedLobsterFlow({
-      taskFlow,
-      runner,
-      runnerParams: {
-        action: "run",
-        pipeline: "noop",
-        cwd: process.cwd(),
-        timeoutMs: 1000,
-        maxStdoutBytes: 4096,
-      },
-      controllerId: "tests/lobster",
-      goal: "Run Lobster workflow",
-    });
+    const result = await runManagedLobsterFlow(createRunFlowParams(taskFlow, runner));
 
     expect(result.ok).toBe(true);
     expect(taskFlow.createManaged).toHaveBeenCalledWith({
@@ -108,19 +96,7 @@ describe("runManagedLobsterFlow", () => {
       },
     });
 
-    const result = await runManagedLobsterFlow({
-      taskFlow,
-      runner,
-      runnerParams: {
-        action: "run",
-        pipeline: "noop",
-        cwd: process.cwd(),
-        timeoutMs: 1000,
-        maxStdoutBytes: 4096,
-      },
-      controllerId: "tests/lobster",
-      goal: "Run Lobster workflow",
-    });
+    const result = await runManagedLobsterFlow(createRunFlowParams(taskFlow, runner));
 
     expect(result.ok).toBe(true);
     expect(taskFlow.setWaiting).toHaveBeenCalledWith({
@@ -146,24 +122,9 @@ describe("runManagedLobsterFlow", () => {
       },
     });
 
-    const result = await runManagedLobsterFlow({
-      taskFlow,
-      runner,
-      runnerParams: {
-        action: "run",
-        pipeline: "noop",
-        cwd: process.cwd(),
-        timeoutMs: 1000,
-        maxStdoutBytes: 4096,
-      },
-      controllerId: "tests/lobster",
-      goal: "Run Lobster workflow",
-    });
-
-    expect(result.ok).toBe(false);
-    if (result.ok) {
-      throw new Error("expected managed Lobster flow to fail");
-    }
+    const result = expectManagedFlowFailure(
+      await runManagedLobsterFlow(createRunFlowParams(taskFlow, runner)),
+    );
     expect(result.error.message).toBe("boom");
     expect(taskFlow.fail).toHaveBeenCalledWith({
       flowId: "flow-1",
@@ -177,24 +138,9 @@ describe("runManagedLobsterFlow", () => {
       run: vi.fn().mockRejectedValue(new Error("crashed")),
     };
 
-    const result = await runManagedLobsterFlow({
-      taskFlow,
-      runner,
-      runnerParams: {
-        action: "run",
-        pipeline: "noop",
-        cwd: process.cwd(),
-        timeoutMs: 1000,
-        maxStdoutBytes: 4096,
-      },
-      controllerId: "tests/lobster",
-      goal: "Run Lobster workflow",
-    });
-
-    expect(result.ok).toBe(false);
-    if (result.ok) {
-      throw new Error("expected managed Lobster flow to fail");
-    }
+    const result = expectManagedFlowFailure(
+      await runManagedLobsterFlow(createRunFlowParams(taskFlow, runner)),
+    );
     expect(result.error.message).toBe("crashed");
     expect(taskFlow.fail).toHaveBeenCalledWith({
       flowId: "flow-1",
@@ -213,20 +159,7 @@ describe("resumeManagedLobsterFlow", () => {
       requiresApproval: null,
     });
 
-    const result = await resumeManagedLobsterFlow({
-      taskFlow,
-      runner,
-      flowId: "flow-1",
-      expectedRevision: 4,
-      runnerParams: {
-        action: "resume",
-        token: "resume-1",
-        approve: true,
-        cwd: process.cwd(),
-        timeoutMs: 1000,
-        maxStdoutBytes: 4096,
-      },
-    });
+    const result = await resumeManagedLobsterFlow(createResumeFlowParams(taskFlow, runner));
 
     expect(result.ok).toBe(true);
     expect(taskFlow.resume).toHaveBeenCalledWith({
@@ -255,25 +188,9 @@ describe("resumeManagedLobsterFlow", () => {
       requiresApproval: null,
     });
 
-    const result = await resumeManagedLobsterFlow({
-      taskFlow,
-      runner,
-      flowId: "flow-1",
-      expectedRevision: 4,
-      runnerParams: {
-        action: "resume",
-        token: "resume-1",
-        approve: true,
-        cwd: process.cwd(),
-        timeoutMs: 1000,
-        maxStdoutBytes: 4096,
-      },
-    });
-
-    expect(result.ok).toBe(false);
-    if (result.ok) {
-      throw new Error("expected resumed Lobster flow to fail");
-    }
+    const result = expectManagedFlowFailure(
+      await resumeManagedLobsterFlow(createResumeFlowParams(taskFlow, runner)),
+    );
     expect(result.error.message).toMatch(/revision_conflict/);
     expect(runner.run).not.toHaveBeenCalled();
   });
@@ -292,20 +209,7 @@ describe("resumeManagedLobsterFlow", () => {
       },
     });
 
-    const result = await resumeManagedLobsterFlow({
-      taskFlow,
-      runner,
-      flowId: "flow-1",
-      expectedRevision: 4,
-      runnerParams: {
-        action: "resume",
-        token: "resume-1",
-        approve: true,
-        cwd: process.cwd(),
-        timeoutMs: 1000,
-        maxStdoutBytes: 4096,
-      },
-    });
+    const result = await resumeManagedLobsterFlow(createResumeFlowParams(taskFlow, runner));
 
     expect(result.ok).toBe(true);
     expect(taskFlow.setWaiting).toHaveBeenCalledWith({

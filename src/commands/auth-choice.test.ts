@@ -21,7 +21,7 @@ import {
   setupAuthTestEnv,
 } from "./test-wizard-helpers.js";
 
-type DetectZaiEndpoint = typeof import("./zai-endpoint-detect.js").detectZaiEndpoint;
+type DetectZaiEndpoint = typeof import("../plugins/provider-zai-endpoint.js").detectZaiEndpoint;
 
 const GOOGLE_GEMINI_DEFAULT_MODEL = "google/gemini-3.1-pro-preview";
 const MINIMAX_CN_API_BASE_URL = "https://api.minimax.chat/v1";
@@ -31,11 +31,12 @@ const ZAI_CODING_CN_BASE_URL = "https://open.bigmodel.cn/api/coding/paas/v4";
 const loginOpenAICodexOAuth = vi.hoisted(() =>
   vi.fn<() => Promise<OAuthCredentials | null>>(async () => null),
 );
-vi.mock("./openai-codex-oauth.js", () => ({
+vi.mock("../plugins/provider-openai-codex-oauth.js", () => ({
   loginOpenAICodexOAuth,
 }));
 
 const resolvePluginProviders = vi.hoisted(() => vi.fn<() => ProviderPlugin[]>(() => []));
+const runProviderModelSelectedHook = vi.hoisted(() => vi.fn(async () => {}));
 vi.mock("../plugins/provider-auth-choice.runtime.js", async () => {
   const actual = await vi.importActual<typeof import("../plugins/provider-auth-choice.runtime.js")>(
     "../plugins/provider-auth-choice.runtime.js",
@@ -43,11 +44,12 @@ vi.mock("../plugins/provider-auth-choice.runtime.js", async () => {
   return {
     ...actual,
     resolvePluginProviders,
+    runProviderModelSelectedHook,
   };
 });
 
 const detectZaiEndpoint = vi.hoisted(() => vi.fn<DetectZaiEndpoint>(async () => null));
-vi.mock("./zai-endpoint-detect.js", () => ({
+vi.mock("../plugins/provider-zai-endpoint.js", () => ({
   detectZaiEndpoint,
 }));
 
@@ -644,6 +646,7 @@ describe("applyAuthChoice", () => {
     vi.unstubAllGlobals();
     resolvePluginProviders.mockReset();
     resolvePluginProviders.mockReturnValue(createDefaultProviderPlugins());
+    runProviderModelSelectedHook.mockClear();
     detectZaiEndpoint.mockReset();
     detectZaiEndpoint.mockResolvedValue(null);
     loginOpenAICodexOAuth.mockReset();

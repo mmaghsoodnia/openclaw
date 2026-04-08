@@ -12,6 +12,7 @@ import {
   renderTopbarThemeModeToggle,
   switchChatSession,
 } from "./app-render.helpers.ts";
+import { warnQueryToken } from "./app-settings.ts";
 import type { AppViewState } from "./app-view-state.ts";
 import { loadAgentFileContent, loadAgentFiles, saveAgentFile } from "./controllers/agent-files.ts";
 import { loadAgentIdentities, loadAgentIdentity } from "./controllers/agent-identity.ts";
@@ -65,8 +66,11 @@ import {
   rotateDeviceToken,
 } from "./controllers/devices.ts";
 import {
+  backfillDreamDiary,
   loadDreamDiary,
   loadDreamingStatus,
+  resetDreamDiary,
+  resolveConfiguredDreaming,
   updateDreamingEnabled,
 } from "./controllers/dreaming.ts";
 import {
@@ -78,7 +82,14 @@ import {
 import { loadLogs } from "./controllers/logs.ts";
 import { loadNodes } from "./controllers/nodes.ts";
 import { loadPresence } from "./controllers/presence.ts";
-import { deleteSessionsAndRefresh, loadSessions, patchSession } from "./controllers/sessions.ts";
+import {
+  branchSessionFromCheckpoint,
+  deleteSessionsAndRefresh,
+  loadSessions,
+  patchSession,
+  restoreSessionFromCheckpoint,
+  toggleSessionCompactionCheckpoints,
+} from "./controllers/sessions.ts";
 import {
   closeClawHubDetail,
   installFromClawHub,
@@ -111,6 +122,7 @@ import {
 import { renderChat } from "./views/chat.ts";
 import { renderCommandPalette } from "./views/command-palette.ts";
 import { renderConfig } from "./views/config.ts";
+import { renderDreaming } from "./views/dreaming.ts";
 import { renderExecApprovalPrompt } from "./views/exec-approval.ts";
 import { renderGatewayUrlConfirmation } from "./views/gateway-url-confirmation.ts";
 import { renderLoginGate } from "./views/login-gate.ts";
@@ -148,25 +160,6 @@ const lazyLogs = createLazy(() => import("./views/logs.ts"));
 const lazyNodes = createLazy(() => import("./views/nodes.ts"));
 const lazySessions = createLazy(() => import("./views/sessions.ts"));
 const lazySkills = createLazy(() => import("./views/skills.ts"));
-const lazyDreamingView = createLazy(() => import("./views/dreaming.ts"));
-
-function resolveConfiguredDreaming(configValue: Record<string, unknown> | null): {
-  enabled: boolean;
-} {
-  if (!configValue) {
-    return {
-      enabled: false,
-    };
-  }
-  const plugins = configValue.plugins as Record<string, unknown> | undefined;
-  const entries = plugins?.entries as Record<string, unknown> | undefined;
-  const memoryCore = entries?.["memory-core"] as Record<string, unknown> | undefined;
-  const config = memoryCore?.config as Record<string, unknown> | undefined;
-  const dreaming = config?.dreaming as Record<string, unknown> | undefined;
-  return {
-    enabled: typeof dreaming?.enabled === "boolean" ? dreaming.enabled : false,
-  };
-}
 
 function formatDreamNextCycle(nextRunAtMs: number | undefined): string | null {
   if (typeof nextRunAtMs !== "number" || !Number.isFinite(nextRunAtMs)) {
@@ -699,7 +692,9 @@ export function renderApp(state: AppViewState) {
                           ?disabled=${dreamingLoading || state.dreamDiaryLoading}
                           @click=${refreshDreaming}
                         >
-                          ${dreamingRefreshLoading ? "Refreshing…" : "Refresh"}
+                          ${dreamingRefreshLoading
+                            ? t("dreaming.header.refreshing")
+                            : t("dreaming.header.refresh")}
                         </button>
                         <button
                           class="dreams__phase-toggle ${dreamingOn
@@ -709,9 +704,9 @@ export function renderApp(state: AppViewState) {
                           @click=${() => applyDreamingEnabled(!dreamingOn)}
                         >
                           <span class="dreams__phase-toggle-dot"></span>
-                          <span class="dreams__phase-toggle-label"
-                            >${dreamingOn ? "Dreaming On" : "Dreaming Off"}</span
-                          >
+                          <span class="dreams__phase-toggle-label">
+                            ${dreamingOn ? t("dreaming.header.on") : t("dreaming.header.off")}
+                          </span>
                         </button>
                       </div>
                     `
@@ -735,6 +730,7 @@ export function renderApp(state: AppViewState) {
               cronEnabled: state.cronStatus?.enabled ?? null,
               cronNext,
               lastChannelsRefresh: state.channelsLastSuccess,
+              warnQueryToken,
               usageResult: state.usageResult,
               sessionsResult: state.sessionsResult,
               skillsReport: state.skillsReport,
@@ -836,6 +832,11 @@ export function renderApp(state: AppViewState) {
                 page: state.sessionsPage,
                 pageSize: state.sessionsPageSize,
                 selectedKeys: state.sessionsSelectedKeys,
+                expandedCheckpointKey: state.sessionsExpandedCheckpointKey,
+                checkpointItemsByKey: state.sessionsCheckpointItemsByKey,
+                checkpointLoadingKey: state.sessionsCheckpointLoadingKey,
+                checkpointBusyKey: state.sessionsCheckpointBusyKey,
+                checkpointErrorByKey: state.sessionsCheckpointErrorByKey,
                 onFiltersChange: (next) => {
                   state.sessionsFilterActive = next.activeMinutes;
                   state.sessionsFilterLimit = next.limit;
@@ -901,6 +902,21 @@ export function renderApp(state: AppViewState) {
                   switchChatSession(state, sessionKey);
                   state.setTab("chat" as import("./navigation.ts").Tab);
                 },
+                onToggleCheckpointDetails: (sessionKey) =>
+                  toggleSessionCompactionCheckpoints(state, sessionKey),
+                onBranchFromCheckpoint: async (sessionKey, checkpointId) => {
+                  const nextKey = await branchSessionFromCheckpoint(
+                    state,
+                    sessionKey,
+                    checkpointId,
+                  );
+                  if (nextKey) {
+                    switchChatSession(state, nextKey);
+                    state.setTab("chat" as import("./navigation.ts").Tab);
+                  }
+                },
+                onRestoreCheckpoint: (sessionKey, checkpointId) =>
+                  restoreSessionFromCheckpoint(state, sessionKey, checkpointId),
               }),
             )
           : nothing}
@@ -1859,7 +1875,7 @@ export function renderApp(state: AppViewState) {
               assistantName: state.assistantName,
               configPath: state.configSnapshot?.path ?? null,
               rawAvailable: typeof state.configSnapshot?.raw === "string",
-              navRootLabel: "Appearance",
+              navRootLabel: t("tabs.appearance"),
               includeSections: [...APPEARANCE_SECTION_KEYS],
               includeVirtualSections: true,
             })
@@ -2099,29 +2115,33 @@ export function renderApp(state: AppViewState) {
             )
           : nothing}
         ${state.tab === "dreams"
-          ? lazyRender(lazyDreamingView, (m) =>
-              m.renderDreaming({
-                active: dreamingOn,
-                shortTermCount: state.dreamingStatus?.shortTermCount ?? 0,
-                totalSignalCount: state.dreamingStatus?.totalSignalCount ?? 0,
-                phaseSignalCount: state.dreamingStatus?.phaseSignalCount ?? 0,
-                promotedCount: state.dreamingStatus?.promotedToday ?? 0,
-                dreamingOf: null,
-                nextCycle: dreamingNextCycle,
-                timezone: state.dreamingStatus?.timezone ?? null,
-                statusLoading: state.dreamingStatusLoading,
-                statusError: state.dreamingStatusError,
-                modeSaving: state.dreamingModeSaving,
-                dreamDiaryLoading: state.dreamDiaryLoading,
-                dreamDiaryError: state.dreamDiaryError,
-                dreamDiaryPath: state.dreamDiaryPath,
-                dreamDiaryContent: state.dreamDiaryContent,
-                onRefresh: refreshDreaming,
-                onRefreshDiary: () => loadDreamDiary(state),
-                onToggleEnabled: applyDreamingEnabled,
-                onRequestUpdate: requestHostUpdate,
-              }),
-            )
+          ? renderDreaming({
+              active: dreamingOn,
+              shortTermCount: state.dreamingStatus?.shortTermCount ?? 0,
+              totalSignalCount: state.dreamingStatus?.totalSignalCount ?? 0,
+              promotedCount: state.dreamingStatus?.promotedToday ?? 0,
+              phaseSignalCount: state.dreamingStatus?.phaseSignalCount ?? 0,
+              shortTermEntries: state.dreamingStatus?.shortTermEntries ?? [],
+              signalEntries: state.dreamingStatus?.signalEntries ?? [],
+              promotedEntries: state.dreamingStatus?.promotedEntries ?? [],
+              dreamingOf: null,
+              nextCycle: dreamingNextCycle,
+              timezone: state.dreamingStatus?.timezone ?? null,
+              statusLoading: state.dreamingStatusLoading,
+              statusError: state.dreamingStatusError,
+              modeSaving: state.dreamingModeSaving,
+              dreamDiaryLoading: state.dreamDiaryLoading,
+              dreamDiaryActionLoading: state.dreamDiaryActionLoading,
+              dreamDiaryError: state.dreamDiaryError,
+              dreamDiaryPath: state.dreamDiaryPath,
+              dreamDiaryContent: state.dreamDiaryContent,
+              onRefresh: refreshDreaming,
+              onRefreshDiary: () => loadDreamDiary(state),
+              onBackfillDiary: () => backfillDreamDiary(state),
+              onResetDiary: () => resetDreamDiary(state),
+              onToggleEnabled: applyDreamingEnabled,
+              onRequestUpdate: requestHostUpdate,
+            })
           : nothing}
       </main>
       ${renderExecApprovalPrompt(state)} ${renderGatewayUrlConfirmation(state)} ${nothing}
