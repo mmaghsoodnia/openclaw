@@ -41,14 +41,14 @@ describe("buildPublishedInstallScenarios", () => {
 
 describe("buildPublishedInstallCommandArgs", () => {
   it("runs lifecycle scripts for published install verification", () => {
-    const args = buildPublishedInstallCommandArgs("/tmp/openclaw-prefix", "openclaw@2026.4.9");
+    const args = buildPublishedInstallCommandArgs("/tmp/openclaw-prefix", "openclaw@2026.4.10");
 
     expect(args).toEqual([
       "install",
       "-g",
       "--prefix",
       "/tmp/openclaw-prefix",
-      "openclaw@2026.4.9",
+      "openclaw@2026.4.10",
       "--no-fund",
       "--no-audit",
     ]);
@@ -118,7 +118,7 @@ describe("collectInstalledMirroredRootDependencyManifestErrors", () => {
 
     try {
       writePackageFile(packageRoot, "package.json", {
-        version: "2026.4.9",
+        version: "2026.4.10",
         dependencies: {},
       });
       writePackageFile(packageRoot, "dist/extensions/slack/package.json", {
@@ -146,7 +146,7 @@ describe("collectInstalledMirroredRootDependencyManifestErrors", () => {
 
     try {
       writePackageFile(packageRoot, "package.json", {
-        version: "2026.4.9",
+        version: "2026.4.10",
         optionalDependencies: {
           "@discordjs/opus": "^0.10.0",
         },
@@ -174,7 +174,7 @@ describe("collectInstalledMirroredRootDependencyManifestErrors", () => {
 
     try {
       writePackageFile(packageRoot, "package.json", {
-        version: "2026.4.9",
+        version: "2026.4.10",
         dependencies: {
           "@slack/web-api": "^7.16.0",
         },
@@ -204,7 +204,7 @@ describe("collectInstalledMirroredRootDependencyManifestErrors", () => {
 
     try {
       writePackageFile(packageRoot, "package.json", {
-        version: "2026.4.9",
+        version: "2026.4.10",
         dependencies: {},
       });
       mkdirSync(join(packageRoot, "dist/extensions/slack"), { recursive: true });
@@ -227,7 +227,7 @@ describe("collectInstalledMirroredRootDependencyManifestErrors", () => {
 
     try {
       writePackageFile(packageRoot, "package.json", {
-        version: "2026.4.9",
+        version: "2026.4.10",
         dependencies: {},
       });
       mkdirSync(join(packageRoot, "dist/extensions/slack"), { recursive: true });
@@ -245,12 +245,39 @@ describe("collectInstalledMirroredRootDependencyManifestErrors", () => {
 
     try {
       writePackageFile(packageRoot, "package.json", {
-        version: "2026.4.9",
+        version: "2026.4.10",
         dependencies: {},
       });
       writePackageFile(packageRoot, "dist/extensions/device-pair/openclaw.plugin.json", {
         id: "device-pair",
       });
+
+      expect(collectInstalledMirroredRootDependencyManifestErrors(packageRoot)).toEqual([]);
+    } finally {
+      rmSync(packageRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("allows npm update compatibility sidecar directories without package.json", () => {
+    const packageRoot = makeInstalledPackageRoot();
+
+    try {
+      writePackageFile(packageRoot, "package.json", {
+        version: "2026.4.10",
+        dependencies: {},
+      });
+      mkdirSync(join(packageRoot, "dist/extensions/qa-channel"), { recursive: true });
+      mkdirSync(join(packageRoot, "dist/extensions/qa-lab"), { recursive: true });
+      writeFileSync(
+        join(packageRoot, "dist/extensions/qa-channel/runtime-api.js"),
+        "export {};\n",
+        "utf8",
+      );
+      writeFileSync(
+        join(packageRoot, "dist/extensions/qa-lab/runtime-api.js"),
+        "export {};\n",
+        "utf8",
+      );
 
       expect(collectInstalledMirroredRootDependencyManifestErrors(packageRoot)).toEqual([]);
     } finally {
@@ -264,7 +291,7 @@ describe("collectInstalledMirroredRootDependencyManifestErrors", () => {
 
     try {
       writePackageFile(packageRoot, "package.json", {
-        version: "2026.4.9",
+        version: "2026.4.10",
         dependencies: {},
       });
       writePackageFile(outsideManifestRoot, "package.json", {

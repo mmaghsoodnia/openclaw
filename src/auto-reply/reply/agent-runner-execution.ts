@@ -23,8 +23,8 @@ import {
   isOverloadedErrorMessage,
   isRateLimitErrorMessage,
   isTransientHttpError,
-  sanitizeUserFacingText,
 } from "../../agents/pi-embedded-helpers.js";
+import { sanitizeUserFacingText } from "../../agents/pi-embedded-helpers/sanitize-user-facing-text.js";
 import { isLikelyExecutionAckPrompt } from "../../agents/pi-embedded-runner/run/incomplete-turn.js";
 import { runEmbeddedPiAgent } from "../../agents/pi-embedded.js";
 import {
@@ -172,6 +172,7 @@ function setFallbackSelectionStateField(
       }
       return false;
   }
+  throw new Error("Unsupported fallback selection state key");
 }
 
 function snapshotFallbackSelectionState(entry: SessionEntry): FallbackSelectionState {
@@ -320,11 +321,45 @@ function isToolResultTurnMismatchError(message: string): boolean {
   );
 }
 
+function collapseRepeatedFailureDetail(message: string): string {
+  const parts = message
+    .split(/\s+\|\s+/u)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (parts.length >= 2 && parts.every((part) => part === parts[0])) {
+    return parts[0];
+  }
+  return message.trim();
+}
+
+const SAFE_MISSING_API_KEY_PROVIDERS = new Set(["anthropic", "google", "openai", "openai-codex"]);
+
+function buildMissingApiKeyFailureText(message: string): string | null {
+  const normalizedMessage = collapseRepeatedFailureDetail(message);
+  const providerMatch = normalizedMessage.match(/No API key found for provider "([^"]+)"/u);
+  const provider = providerMatch?.[1]?.trim().toLowerCase();
+  if (!provider) {
+    return null;
+  }
+  if (provider === "openai" && normalizedMessage.includes("OpenAI Codex OAuth")) {
+    return "⚠️ Missing API key for OpenAI on the gateway. Use `openai-codex/gpt-5.4` for OAuth, or set `OPENAI_API_KEY`, then try again.";
+  }
+  if (SAFE_MISSING_API_KEY_PROVIDERS.has(provider)) {
+    return `⚠️ Missing API key for provider "${provider}". Configure the gateway auth for that provider, then try again.`;
+  }
+  return "⚠️ Missing API key for the selected provider on the gateway. Configure provider auth, then try again.";
+}
+
 function buildExternalRunFailureText(message: string): string {
-  if (isToolResultTurnMismatchError(message)) {
+  const normalizedMessage = collapseRepeatedFailureDetail(message);
+  if (isToolResultTurnMismatchError(normalizedMessage)) {
     return "⚠️ Session history got out of sync. Please try again, or use /new to start a fresh session.";
   }
-  const oauthRefreshFailure = classifyOAuthRefreshFailure(message);
+  const missingApiKeyFailure = buildMissingApiKeyFailureText(normalizedMessage);
+  if (missingApiKeyFailure) {
+    return missingApiKeyFailure;
+  }
+  const oauthRefreshFailure = classifyOAuthRefreshFailure(normalizedMessage);
   if (oauthRefreshFailure) {
     const loginCommand = buildOAuthRefreshFailureLoginCommand(oauthRefreshFailure.provider);
     if (oauthRefreshFailure.reason) {
@@ -594,19 +629,42 @@ export async function runAgentTurnWithFallback(params: {
   let bootstrapPromptWarningSignaturesSeen = resolveBootstrapWarningSignaturesSeen(
     params.getActiveSessionEntry()?.systemPromptReport,
   );
-  const persistFallbackCandidateSelection = async (provider: string, model: string) => {
+  const persistFallbackCandidateSelection = async (
+    provider: string,
+    model: string,
+  ): Promise<(() => Promise<void>) | undefined> => {
     if (
       !params.sessionKey ||
       !params.activeSessionStore ||
       (provider === params.followupRun.run.provider && model === params.followupRun.run.model)
     ) {
-      return;
+      return undefined;
     }
 
     const activeSessionEntry =
       params.getActiveSessionEntry() ?? params.activeSessionStore[params.sessionKey];
     if (!activeSessionEntry) {
-      return;
+      return undefined;
+    }
+
+    // Don't overwrite a user-initiated model override (e.g. from /models or
+    // /model) with the fallback model.  The user's explicit selection should
+    // survive transient primary-model failures so subsequent messages still
+    // target the model the user chose.  Fallback persistence is only
+    // appropriate when the override was itself set by a previous fallback
+    // ("auto") or when there is no override yet.
+    //
+    // `modelOverrideSource` was added later, so older persisted sessions can
+    // carry a user-selected override without the source field.  Treat any
+    // entry with a `modelOverride` but missing `modelOverrideSource` as legacy
+    // user state, matching the backward-compat treatment in
+    // session-reset-service.
+    const isUserModelOverride =
+      activeSessionEntry.modelOverrideSource === "user" ||
+      (activeSessionEntry.modelOverrideSource === undefined &&
+        Boolean(normalizeOptionalString(activeSessionEntry.modelOverride)));
+    if (isUserModelOverride) {
+      return undefined;
     }
 
     const previousState = snapshotFallbackSelectionState(activeSessionEntry);
@@ -618,7 +676,7 @@ export async function runAgentTurnWithFallback(params: {
     });
     const nextState = applied.nextState;
     if (!applied.updated || !nextState) {
-      return;
+      return undefined;
     }
     params.activeSessionStore[params.sessionKey] = activeSessionEntry;
 
@@ -811,8 +869,10 @@ export async function runAgentTurnWithFallback(params: {
                     ],
                   images: params.opts?.images,
                   imageOrder: params.opts?.imageOrder,
+                  skillsSnapshot: params.followupRun.run.skillsSnapshot,
                   messageProvider: params.followupRun.run.messageProvider,
                   agentAccountId: params.followupRun.run.agentAccountId,
+                  senderIsOwner: params.followupRun.run.senderIsOwner,
                   abortSignal: params.replyOperation?.abortSignal ?? params.opts?.abortSignal,
                   replyOperation: params.replyOperation,
                 });
@@ -1181,12 +1241,12 @@ export async function runAgentTurnWithFallback(params: {
       fallbackModel = fallbackResult.model;
       fallbackAttempts = Array.isArray(fallbackResult.attempts)
         ? fallbackResult.attempts.map((attempt) => ({
-            provider: String(attempt.provider ?? ""),
-            model: String(attempt.model ?? ""),
-            error: String(attempt.error ?? ""),
-            reason: attempt.reason ? String(attempt.reason) : undefined,
+            provider: attempt.provider,
+            model: attempt.model,
+            error: attempt.error,
+            reason: attempt.reason || undefined,
             status: typeof attempt.status === "number" ? attempt.status : undefined,
-            code: attempt.code ? String(attempt.code) : undefined,
+            code: attempt.code || undefined,
           }))
         : [];
 
