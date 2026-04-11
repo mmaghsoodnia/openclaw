@@ -626,6 +626,37 @@ New design: deterministic scripts handle all verification; agents provide judgme
 Cron: `scan.py` at 14:00 UTC triggers event-driven chain → analyst → contrarian → sizing → paper trade.
 Health check: `pipeline-health.py` at 17:00 UTC → Percy → mhive Telegram daily.
 
+### Pipeline Scripts — Key Behaviors
+
+**`verify-outcomes.py`** (cron: hourly, `/root/.openclaw/logs/verify-outcomes.log`)
+
+- Resolves open paper trades against the Polymarket API.
+- **Do NOT use `?clob_token_ids=` parameter** — returns empty array for resolved/archived markets.
+- **Correct lookup:** `GET /events?slug=<event-slug>` where event slug = market slug minus the last `-<outcome>` segment.
+  - Example: `ucl-rma1-bay1-2026-04-07-bay1` → event slug `ucl-rma1-bay1-2026-04-07`
+- **Resolution signal (priority order):**
+  1. Official: `market.resolved=true` + `market.winnerOutcome` set
+  2. Price-settled: `event.closed=true` + `outcomePrices: ["1","0"]` (YES won) or `["0","1"]` (YES lost)
+- Polymarket price-settles on-chain before setting `resolved=true` — the lag can be days to weeks. Price-settlement is the reliable real-time signal.
+- Fixed 2026-04-11. Was silently returning `0 resolved` for 10+ days due to wrong API query.
+
+**`paper-trade.py`** (triggered by `size-and-check.py` after each pipeline run)
+
+- `PAPER_EXPOSURE_CAP = 500.0` — **hard stop**: if total open exposure ≥ $500 at execution time, no new trades are entered that day. Log message: `HALT: open exposure $X.XX >= cap $500.00`.
+- Separate from `PAPER_MAX_TOTAL = 2000.0` in `size-and-check.py` which controls Kelly position sizing — do not conflate.
+- Dedup guard: skips any market where a matching `token_id` already has an open position.
+- Cap added 2026-04-11 after exposure hit $586 on a high-volume match day.
+
+### TH-001 Calibration Status (as of 2026-04-11)
+
+| Metric | Value |
+|--------|-------|
+| Closed trades | 18 / 30 (interim checkpoint) |
+| Win rate (recent-phase) | 8W / 6L = 44.4% |
+| Net PnL all-time | +$130.15 |
+| Open exposure | $0.00 |
+| Graduation gate | 30 closed trades with API-verified outcomes |
+
 ---
 
 ## Mhive OS v2 — Fractal Operating System (2026-03-22)
